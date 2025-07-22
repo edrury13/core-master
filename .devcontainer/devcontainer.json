@@ -1,0 +1,28 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2.12.2": {
+      "version": "latest",
+      "moby": true
+    }
+  },
+  "runArgs": ["--privileged"],
+  "remoteUser": "vscode",
+  "onCreateCommand": "npm install -g claude-flow && npm install -g @anthropic-ai/claude-code && claude-flow init --sparc --force",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rooveterinaryinc.roo-cline",
+        "vsls-contrib.gistfs",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "github.copilot",
+        "github.copilot-chat"
+      ]
+    }
+  },
+  "shutdownAction": "none"
+}
