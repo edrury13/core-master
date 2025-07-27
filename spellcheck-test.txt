@@ -1,0 +1,42 @@
+This document contains several repeated misspellings for testing the new LibreOffice spell check features.
+
+The companys new blockchain technologie is revolutionizing the industrie. Our blockchain 
+solutions provide unpresidented security for all transactons. The technologie behind 
+blockchain is complex but our implimentation makes it accessable to everyone.
+
+Our companys commitment to blockchain development ensures that all transactons are 
+secure and transparant. The new technologie stack includes several componants:
+
+1. Blockchain core implimentation
+2. Transactons processing engine  
+3. Securitie protocols
+4. Transparant reporting tools
+
+The industrie leaders agree that blockchain technologie is the future. Our companys 
+vision aligns with industrie standards while providing unpresidented innovation in 
+transactons processing.
+
+Test words with many possible corrections:
+- recieve (should show up to 10 suggestions now instead of 7)
+- occured (test multiple suggestions)
+- seperate (common misspelling)
+- accomodate (test suggestion variety)
+- embarass (missing letter)
+- millenium (double letter issue)
+- supercede (common mistake)
+- concensus (vowel confusion)
+- maintainance (extra letter)
+- pronounciation (common error)
+
+This document deliberately contains the following repeated unknown technical terms that 
+should be detected by "Learn from Document":
+- blockchain (appears 6 times)
+- technologie (appears 5 times)  
+- companys (appears 3 times)
+- transactons (appears 4 times)
+- unpresidented (appears 2 times)
+- implimentation (appears 2 times)
+- industrie (appears 3 times)
+- transparant (appears 2 times)
+- securitie (appears 2 times)
+- componants (appears 1 time - won't be suggested since threshold is 2)

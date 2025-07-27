@@ -18,6 +18,9 @@
  */
 
 #include <memory>
+#include <map>
+#include <vector>
+#include <algorithm>
 #include "SpellAttrib.hxx"
 #include <sfx2/bindings.hxx>
 #include <sfx2/sfxsids.hrc>
@@ -40,6 +43,8 @@
 #include <com/sun/star/linguistic2/XSpellAlternatives.hpp>
 #include <com/sun/star/linguistic2/XSearchableDictionaryList.hpp>
 #include <com/sun/star/linguistic2/XSpellChecker1.hpp>
+#include <com/sun/star/linguistic2/DictionaryType.hpp>
+#include <com/sun/star/uno/Exception.hpp>
 #include <sfx2/app.hxx>
 #include <rtl/ustrbuf.hxx>
 #include <vcl/specialchars.hxx>
@@ -51,6 +56,8 @@
 #include <SpellDialog.hxx>
 #include <optlingu.hxx>
 #include <treeopt.hxx>
+#include <dialmgr.hxx>
+#include <strings.hrc>
 #include <svtools/colorcfg.hxx>
 #include <svtools/langtab.hxx>
 #include <sal/log.hxx>
@@ -182,6 +189,7 @@ SpellDialog::SpellDialog(SpellDialogChildWindow* pChildWindow,
     , m_xIgnoreRulePB(m_xBuilder->weld_button(u"ignorerule"_ustr))
     , m_xAddToDictPB(m_xBuilder->weld_button(u"add"_ustr))
     , m_xAddToDictMB(m_xBuilder->weld_menu_button(u"addmb"_ustr))
+    , m_xLearnFromDocPB(m_xBuilder->weld_button(u"learnfromdoc"_ustr))
     , m_xChangePB(m_xBuilder->weld_button(u"change"_ustr))
     , m_xChangeAllPB(m_xBuilder->weld_button(u"changeall"_ustr))
     , m_xAutoCorrPB(m_xBuilder->weld_button(u"autocorrect"_ustr))
@@ -254,6 +262,7 @@ void SpellDialog::Init_Impl()
     m_xIgnorePB->connect_clicked(LINK( this, SpellDialog, IgnoreHdl ) );
     m_xIgnoreAllPB->connect_clicked(LINK( this, SpellDialog, IgnoreAllHdl ) );
     m_xIgnoreRulePB->connect_clicked(LINK( this, SpellDialog, IgnoreAllHdl ) );
+    m_xLearnFromDocPB->connect_clicked(LINK( this, SpellDialog, LearnFromDocHdl ) );
     m_xUndoPB->connect_clicked(LINK( this, SpellDialog, UndoHdl ) );
 
     m_xAutoCorrPB->connect_clicked( LINK( this, SpellDialog, ExtClickHdl ) );
@@ -622,6 +631,200 @@ IMPL_LINK( SpellDialog, IgnoreAllHdl, weld::Button&, rButton, void )
     }
 
     SpellContinue_Impl(&xGuard);
+}
+
+IMPL_LINK_NOARG(SpellDialog, LearnFromDocHdl, weld::Button&, void)
+{
+    try
+    {
+        // Collect all unknown words from the document
+        std::map<OUString, int> unknownWords;
+        
+        // Get spell checker
+        Reference< XSpellChecker1 > xSpellChecker = LinguMgr::GetSpellChecker();
+        if (!xSpellChecker.is())
+        {
+            SAL_WARN("cui.dialogs", "LearnFromDocHdl: No spell checker available");
+            return;
+        }
+        
+        // Safety check
+        if (!m_xSentenceED)
+        {
+            SAL_WARN("cui.dialogs", "LearnFromDocHdl: No sentence editor available");
+            return;
+        }
+        
+        // Note: We don't freeze the suggestion list here because it causes
+        // crashes when Impl_Restore tries to update the UI
+        
+        // Scan the entire document
+        bool bHasMoreSentences = true;
+        int nSentenceCount = 0;
+        const int nMaxSentences = 1000; // Safety limit
+        
+        while (bHasMoreSentences && nSentenceCount < nMaxSentences)
+        {
+            // Get next sentence
+            std::unique_ptr<UndoChangeGroupGuard> xGuard;
+            bHasMoreSentences = GetNextSentence_Impl(&xGuard, false, false);
+            nSentenceCount++;
+            
+            if (!bHasMoreSentences || !m_xSentenceED)
+                break;
+                
+            // Check for errors in current sentence
+            bool bHasError = m_xSentenceED->MarkNextError(false, xSpellChecker);
+            while (bHasError)
+            {
+                OUString sErrorText = m_xSentenceED->GetErrorText();
+                if (!sErrorText.isEmpty())
+                {
+                    // Count occurrences of this word
+                    unknownWords[sErrorText]++;
+                }
+                
+                // Move to next error in same sentence
+                bHasError = m_xSentenceED->MarkNextError(true, xSpellChecker);
+            }
+        }
+        
+    
+    // Filter words that appear multiple times (threshold: 2 or more)
+    std::vector<std::pair<OUString, int>> frequentUnknownWords;
+    for (const auto& pair : unknownWords)
+    {
+        if (pair.second >= 2)
+        {
+            frequentUnknownWords.push_back(pair);
+        }
+    }
+    
+    // Sort by frequency (descending)
+    std::sort(frequentUnknownWords.begin(), frequentUnknownWords.end(),
+        [](const std::pair<OUString, int>& a, const std::pair<OUString, int>& b) {
+            return a.second > b.second;
+        });
+    
+    if (frequentUnknownWords.empty())
+    {
+        // No repeated unknown words found
+        std::unique_ptr<weld::MessageDialog> xInfoBox(Application::CreateMessageDialog(m_xDialog.get(),
+            VclMessageType::Info, VclButtonsType::Ok,
+            CuiResId(RID_SVXSTR_SPELL_NO_REPEATED_WORDS)));
+        xInfoBox->run();
+        return;
+    }
+    
+    // For now, use a simple approach - add all frequent words directly
+    // TODO: In future, create a proper selection dialog
+    
+    // Get the standard user dictionary
+    Reference< XDictionary > xDic = LinguMgr::GetStandardDic();
+    if (!xDic.is())
+    {
+        // If no standard dictionary, try to get first active user dictionary
+        const LanguageType nLang = m_xLanguageLB->get_active_id();
+        for (auto& xDicTmp : pImpl->aDics)
+        {
+            if (!xDicTmp.is() || LinguMgr::GetIgnoreAllList() == xDicTmp)
+                continue;
+                
+            uno::Reference< frame::XStorable > xStor( xDicTmp, uno::UNO_QUERY );
+            LanguageType nActLanguage = LanguageTag( xDicTmp->getLocale() ).getLanguageType();
+            if( xDicTmp->isActive()
+                &&  xDicTmp->getDictionaryType() != linguistic2::DictionaryType_NEGATIVE
+                && (nLang == nActLanguage || LANGUAGE_NONE == nActLanguage )
+                && (!xStor.is() || !xStor->isReadonly()) )
+            {
+                xDic = xDicTmp;
+                break;
+            }
+        }
+    }
+        
+    if (xDic.is())
+    {
+        // Make sure dictionary is active
+        xDic->setActive(true);
+        
+        // Build message showing words to be added
+        OUString sWordList;
+        for (const auto& pair : frequentUnknownWords)
+        {
+            if (!sWordList.isEmpty())
+                sWordList += "\n";
+            sWordList += pair.first + " (" + OUString::number(pair.second) + " occurrences)";
+        }
+        
+        // Ask user for confirmation
+        OUString sMsg = "The following words appear repeatedly in the document:\n\n" + 
+                       sWordList + "\n\n" +
+                       "Add all these words to your personal dictionary?";
+                       
+        std::unique_ptr<weld::MessageDialog> xQueryBox(Application::CreateMessageDialog(m_xDialog.get(),
+            VclMessageType::Question, VclButtonsType::YesNo, sMsg));
+            
+        if (xQueryBox->run() == RET_YES)
+        {
+            SAL_WARN("cui.dialogs", "LearnFromDocHdl: User clicked Yes, adding words to dictionary");
+            
+            // Add all words to dictionary
+            int nCount = 0;
+            for (const auto& pair : frequentUnknownWords)
+            {
+                try
+                {
+                    SAL_WARN("cui.dialogs", "LearnFromDocHdl: Adding word: " << pair.first);
+                    xDic->add(pair.first, false, OUString());
+                    nCount++;
+                    SAL_WARN("cui.dialogs", "LearnFromDocHdl: Successfully added word: " << pair.first);
+                }
+                catch (const Exception& e)
+                {
+                    SAL_WARN("cui.dialogs", "LearnFromDocHdl: Failed to add word '" << pair.first << "': " << e.Message);
+                }
+            }
+            
+            // Show confirmation
+            OUString sConfirmMsg = CuiResId(RID_SVXSTR_SPELL_WORDS_ADDED).replaceFirst("%1", OUString::number(nCount));
+            std::unique_ptr<weld::MessageDialog> xInfoBox(Application::CreateMessageDialog(m_xDialog.get(),
+                VclMessageType::Info, VclButtonsType::Ok, sConfirmMsg));
+            xInfoBox->run();
+        }
+    }
+    else
+    {
+        // No dictionary available
+        std::unique_ptr<weld::MessageDialog> xErrorBox(Application::CreateMessageDialog(m_xDialog.get(),
+            VclMessageType::Error, VclButtonsType::Ok,
+            "No user dictionary available. Please create a user dictionary first."));
+        xErrorBox->run();
+    }
+    
+    // Don't restore - it causes issues with the UI state
+    // The spell dialog will handle its own state when the user continues
+    SAL_WARN("cui.dialogs", "LearnFromDocHdl: Completed successfully");
+    }
+    catch (const Exception& e)
+    {
+        SAL_WARN("cui.dialogs", "LearnFromDocHdl: Exception caught: " << e.Message);
+        // Show error to user
+        std::unique_ptr<weld::MessageDialog> xErrorBox(Application::CreateMessageDialog(m_xDialog.get(),
+            VclMessageType::Error, VclButtonsType::Ok,
+            "An error occurred while scanning the document."));
+        xErrorBox->run();
+    }
+    catch (...)
+    {
+        SAL_WARN("cui.dialogs", "LearnFromDocHdl: Unknown exception caught");
+        // Show error to user
+        std::unique_ptr<weld::MessageDialog> xErrorBox(Application::CreateMessageDialog(m_xDialog.get(),
+            VclMessageType::Error, VclButtonsType::Ok,
+            "An unexpected error occurred."));
+        xErrorBox->run();
+    }
+    
 }
 
 IMPL_LINK_NOARG(SpellDialog, UndoHdl, weld::Button&, void)

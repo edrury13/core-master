@@ -619,6 +619,26 @@
                     <property name="top-attach">4</property>
                   </packing>
                 </child>
+                <child>
+                  <object class="GtkButton" id="learnfromdoc">
+                    <property name="label" translatable="yes" context="spellingdialog|learnfromdoc">_Learn from Document</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <property name="valign">center</property>
+                    <property name="hexpand">True</property>
+                    <property name="use-underline">True</property>
+                    <child internal-child="accessible">
+                      <object class="AtkObject" id="learnfromdoc-atkobject">
+                        <property name="AtkObject::accessible-description" translatable="yes" context="spellingdialog|extended_tip|learnfromdoc">Analyzes the current document for repeated unknown words and offers to add them to the dictionary.</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">5</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left-attach">1</property>

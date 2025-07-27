@@ -283,6 +283,8 @@
 #define RID_CUISTR_SPELL_HYPHENATED_COMPOUND        NC_("RID_SVXSTR_SPELL_HYPHENATED_COMPOUND", "Accept possible hyphenated compound words")
 #define RID_CUISTR_SPELL_AUTO                       NC_("RID_SVXSTR_SPELL_AUTO", "Check spelling as you type")
 #define RID_CUISTR_GRAMMAR_AUTO                     NC_("RID_SVXSTR_GRAMMAR_AUTO", "Check grammar as you type")
+#define RID_SVXSTR_SPELL_NO_REPEATED_WORDS          NC_("RID_SVXSTR_SPELL_NO_REPEATED_WORDS", "No repeated unknown words found in the document.")
+#define RID_SVXSTR_SPELL_WORDS_ADDED                NC_("RID_SVXSTR_SPELL_WORDS_ADDED", "%1 words added to dictionary.")
 #define RID_CUISTR_NUM_MIN_WORDLEN                  NC_("RID_SVXSTR_NUM_MIN_WORDLEN", "Minimal number of characters for hyphenation: ")
 #define RID_CUISTR_NUM_PRE_BREAK                    NC_("RID_SVXSTR_NUM_PRE_BREAK", "Characters before line break: ")
 #define RID_CUISTR_NUM_POST_BREAK                   NC_("RID_SVXSTR_NUM_POST_BREAK", "Characters after line break: ")

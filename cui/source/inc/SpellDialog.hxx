@@ -168,6 +168,7 @@ private:
     std::unique_ptr<weld::Button> m_xIgnoreRulePB;
     std::unique_ptr<weld::Button> m_xAddToDictPB;
     std::unique_ptr<weld::MenuButton> m_xAddToDictMB;
+    std::unique_ptr<weld::Button> m_xLearnFromDocPB;
     std::unique_ptr<weld::Button> m_xChangePB;
     std::unique_ptr<weld::Button> m_xChangeAllPB;
     std::unique_ptr<weld::Button> m_xAutoCorrPB;
@@ -184,6 +185,7 @@ private:
     DECL_LINK(ChangeAllHdl, weld::Button&, void);
     DECL_LINK(IgnoreAllHdl, weld::Button&, void);
     DECL_LINK(IgnoreHdl, weld::Button&, void);
+    DECL_LINK(LearnFromDocHdl, weld::Button&, void);
     DECL_LINK(CheckGrammarHdl, weld::Toggleable&, void);
     DECL_LINK(ExtClickHdl, weld::Button&, void);
     DECL_LINK(CancelHdl, weld::Button&, void);
