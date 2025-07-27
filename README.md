@@ -76,6 +76,68 @@ the LibreOffice Development Environment
 For more information see the build instructions for your platform in the
 [TDF wiki](https://wiki.documentfoundation.org/Development/How_to_build).
 
+## Environment Variables
+
+LibreOffice supports several environment variables for optional features:
+
+### Google Docs Integration
+To enable Google Docs integration, set your Google API credentials:
+
+```bash
+# Linux/macOS
+export GOOGLE_API_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+export GOOGLE_API_CLIENT_SECRET="your-client-secret"
+
+# Windows Command Prompt
+set GOOGLE_API_CLIENT_ID=your-client-id.apps.googleusercontent.com
+set GOOGLE_API_CLIENT_SECRET=your-client-secret
+
+# Windows PowerShell
+$env:GOOGLE_API_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+$env:GOOGLE_API_CLIENT_SECRET="your-client-secret"
+```
+
+To obtain these credentials:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google Drive API
+4. Create OAuth 2.0 credentials (Desktop application type)
+5. Download the credentials and use the client ID and secret
+
+### OpenAI Whisper Integration
+To enable speech-to-text functionality with OpenAI Whisper:
+
+```bash
+# Linux/macOS
+export OPENAI_API_KEY="sk-your-api-key-here"
+
+# Windows Command Prompt
+set OPENAI_API_KEY=sk-your-api-key-here
+
+# Windows PowerShell
+$env:OPENAI_API_KEY="sk-your-api-key-here"
+```
+
+To get an API key:
+1. Sign up at [OpenAI Platform](https://platform.openai.com/)
+2. Navigate to API keys section
+3. Create a new secret key
+
+### Making Environment Variables Permanent
+
+**Linux/macOS:**
+Add the export commands to your shell configuration file:
+- Bash: `~/.bashrc` or `~/.bash_profile`
+- Zsh: `~/.zshrc`
+
+**Windows:**
+Use System Properties → Environment Variables to add them permanently, or use:
+```cmd
+setx GOOGLE_API_CLIENT_ID "your-client-id.apps.googleusercontent.com"
+setx GOOGLE_API_CLIENT_SECRET "your-client-secret"
+setx OPENAI_API_KEY "sk-your-api-key-here"
+```
+
 ## The Important Bits of Code
 
 Each module should have a `README.md` file inside it which has some
