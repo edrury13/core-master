@@ -1,0 +1,22 @@
+VNC SERVER IS RUNNING!
+
+Connect to: localhost:5900
+
+In TightVNC Viewer, enter exactly:
+localhost::5900
+
+Or in the connection box:
+localhost
+Port: 5900
+
+NO PASSWORD NEEDED - just connect!
+
+After connecting:
+1. You'll see a gray desktop
+2. Right-click anywhere on the desktop
+3. Select "Terminal emulator" or press Ctrl+Alt+T
+4. In the terminal, run:
+   cd /build/instdir/program
+   ./soffice --writer
+
+That's it! You'll see LibreOffice Writer from your build!

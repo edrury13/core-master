@@ -448,6 +448,11 @@ interface BaseTextEditView
         ExecMethod = ExecuteStatusLine ;
         StateMethod = StateStatusLine ;
     ]
+    FN_STAT_DOCTIMER // status()
+    [
+        ExecMethod = ExecuteStatusLine ;
+        StateMethod = StateStatusLine ;
+    ]
     FN_STAT_ACCESSIBILITY_CHECK // status()
     [
         ExecMethod = ExecuteStatusLine;
@@ -1081,6 +1086,12 @@ interface BaseTextEditView
     SID_MOVE_SHAPE_HANDLE
     [
         ExecMethod = Execute ;
+    ]
+
+    FN_SHOW_DOCUMENT_STATISTICS
+    [
+        ExecMethod = Execute ;
+        StateMethod = GetState ;
     ]
 
 }

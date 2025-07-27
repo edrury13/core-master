@@ -30,6 +30,8 @@
 #include <com/sun/star/drawing/EnhancedCustomShapeTextFrame.hpp>
 #include <com/sun/star/drawing/XEnhancedCustomShapeDefaulter.hpp>
 #include <com/sun/star/drawing/XShape.hpp>
+#include <com/sun/star/drawing/FillStyle.hpp>
+#include <com/sun/star/awt/Gradient.hpp>
 #include <comphelper/sequence.hxx>
 #include <o3tl/string_view.hxx>
 #include <sal/log.hxx>
@@ -165,6 +167,10 @@ void CustomShapeProperties::pushToPropSet(
             Sequence< PropertyValue > aExtrusionSequence = maExtrusionPropertyMap.makePropertyValueSequence();
             aPropertyMap.setAnyProperty( PROP_Extrusion, css::uno::Any(aExtrusionSequence));
         }
+        
+        // Enhanced gradient fill handling
+        applyGradientFillProperties(xPropSet, aPropertyMap);
+        
         Sequence< PropertyValue > aSeq = aPropertyMap.makePropertyValueSequence();
         aPropSet.setProperty( PROP_CustomShapeGeometry, aSeq );
 
@@ -257,10 +263,19 @@ void CustomShapeProperties::pushToPropSet(
         aPath.setProperty( PROP_Segments, comphelper::containerToSequence(maSegments) );
 
         if ( maTextRect.has_value() ) {
-            Sequence< EnhancedCustomShapeTextFrame > aTextFrames{
-                { /* tl */ { maTextRect.value().l, maTextRect.value().t },
-                  /* br */ { maTextRect.value().r, maTextRect.value().b } }
-            };
+            // Enhanced text box positioning
+            EnhancedCustomShapeTextFrame aTextFrame;
+            
+            // Fix text rect coordinates to ensure proper positioning
+            aTextFrame.TopLeft.First = maTextRect.value().l;
+            aTextFrame.TopLeft.Second = maTextRect.value().t;
+            aTextFrame.BottomRight.First = maTextRect.value().r;
+            aTextFrame.BottomRight.Second = maTextRect.value().b;
+            
+            // Apply text padding adjustments if needed
+            adjustTextFrameInsets(aTextFrame, aSize);
+            
+            Sequence< EnhancedCustomShapeTextFrame > aTextFrames{ aTextFrame };
             aPath.setProperty( PROP_TextFrames, aTextFrames);
         }
 
@@ -417,6 +432,155 @@ void CustomShapeProperties::pushToPropSet(
         Sequence< PropertyValue > aSeq = aPropertyMap.makePropertyValueSequence();
         PropertySet aPropSet( xPropSet );
         aPropSet.setProperty( PROP_CustomShapeGeometry, aSeq );
+    }
+}
+
+void CustomShapeProperties::applyGradientFillProperties(
+    const Reference<XPropertySet>& xPropSet,
+    PropertyMap& rPropertyMap)
+{
+    try
+    {
+        // Check if shape has gradient fill
+        if (!xPropSet->getPropertySetInfo()->hasPropertyByName("FillStyle"))
+            return;
+            
+        css::drawing::FillStyle eFillStyle;
+        xPropSet->getPropertyValue("FillStyle") >>= eFillStyle;
+        
+        if (eFillStyle == css::drawing::FillStyle_GRADIENT)
+        {
+            // Fix gradient angle conversion
+            if (xPropSet->getPropertySetInfo()->hasPropertyByName("FillGradient"))
+            {
+                css::awt::Gradient aGradient;
+                xPropSet->getPropertyValue("FillGradient") >>= aGradient;
+                
+                // PowerPoint uses different angle system than LibreOffice
+                // Convert angle from PowerPoint (0=right, 90=down) to LibreOffice (0=down, 90=left)
+                sal_Int16 nFixedAngle = (450 - aGradient.Angle) % 360;
+                if (nFixedAngle < 0)
+                    nFixedAngle += 360;
+                
+                aGradient.Angle = nFixedAngle;
+                
+                // Fix gradient step count for smoother rendering
+                if (aGradient.StepCount < 64)
+                    aGradient.StepCount = 256; // Higher value for smoother gradients
+                
+                // Apply fixed gradient
+                xPropSet->setPropertyValue("FillGradient", Any(aGradient));
+            }
+            
+            // Handle transparency gradient
+            if (xPropSet->getPropertySetInfo()->hasPropertyByName("FillTransparenceGradient"))
+            {
+                css::awt::Gradient aTransGradient;
+                if (xPropSet->getPropertyValue("FillTransparenceGradient") >>= aTransGradient)
+                {
+                    // Apply same angle fix to transparency gradient
+                    sal_Int16 nFixedAngle = (450 - aTransGradient.Angle) % 360;
+                    if (nFixedAngle < 0)
+                        nFixedAngle += 360;
+                    
+                    aTransGradient.Angle = nFixedAngle;
+                    aTransGradient.StepCount = 256;
+                    
+                    xPropSet->setPropertyValue("FillTransparenceGradient", Any(aTransGradient));
+                }
+            }
+        }
+    }
+    catch (const Exception&)
+    {
+        SAL_WARN("oox.drawingml", "Error applying gradient fill properties");
+    }
+}
+
+void CustomShapeProperties::adjustTextFrameInsets(
+    EnhancedCustomShapeTextFrame& rTextFrame,
+    const awt::Size& rShapeSize)
+{
+    // Calculate text insets based on shape size
+    // PowerPoint default text margins are different from LibreOffice defaults
+    
+    // Check if we need to adjust for specific shape types
+    bool bNeedsAdjustment = false;
+    
+    switch (mnShapePresetType)
+    {
+        case XML_rect:
+        case XML_roundRect:
+        case XML_ellipse:
+        case XML_triangle:
+        case XML_diamond:
+        case XML_parallelogram:
+        case XML_trapezoid:
+        case XML_hexagon:
+        case XML_octagon:
+        case XML_plus:
+        case XML_star5:
+        case XML_star6:
+        case XML_star8:
+        case XML_star16:
+        case XML_star24:
+        case XML_star32:
+            bNeedsAdjustment = true;
+            break;
+    }
+    
+    if (bNeedsAdjustment)
+    {
+        // Apply PowerPoint-style text margins
+        // Default PowerPoint margins: 7.2pt (left/right), 3.6pt (top/bottom)
+        // Convert to EMU (1pt = 12700 EMU)
+        const sal_Int32 nDefaultLeftRight = 91440;  // 7.2pt
+        const sal_Int32 nDefaultTopBottom = 45720;  // 3.6pt
+        
+        // Adjust text frame if it's too close to shape edges
+        EnhancedCustomShapeParameter aLeft = rTextFrame.TopLeft.First;
+        EnhancedCustomShapeParameter aTop = rTextFrame.TopLeft.Second;
+        EnhancedCustomShapeParameter aRight = rTextFrame.BottomRight.First;
+        EnhancedCustomShapeParameter aBottom = rTextFrame.BottomRight.Second;
+        
+        // Get numeric values if possible
+        sal_Int32 nLeft = 0, nTop = 0, nRight = rShapeSize.Width, nBottom = rShapeSize.Height;
+        
+        if (aLeft.Value >>= nLeft)
+        {
+            if (nLeft < nDefaultLeftRight)
+            {
+                aLeft.Value <<= nDefaultLeftRight;
+                rTextFrame.TopLeft.First = aLeft;
+            }
+        }
+        
+        if (aTop.Value >>= nTop)
+        {
+            if (nTop < nDefaultTopBottom)
+            {
+                aTop.Value <<= nDefaultTopBottom;
+                rTextFrame.TopLeft.Second = aTop;
+            }
+        }
+        
+        if (aRight.Value >>= nRight)
+        {
+            if (nRight > rShapeSize.Width - nDefaultLeftRight)
+            {
+                aRight.Value <<= (rShapeSize.Width - nDefaultLeftRight);
+                rTextFrame.BottomRight.First = aRight;
+            }
+        }
+        
+        if (aBottom.Value >>= nBottom)
+        {
+            if (nBottom > rShapeSize.Height - nDefaultTopBottom)
+            {
+                aBottom.Value <<= (rShapeSize.Height - nDefaultTopBottom);
+                rTextFrame.BottomRight.Second = aBottom;
+            }
+        }
     }
 }
 

@@ -1,0 +1,2 @@
+./instdir/program/soffice: line 187: /c/Users/drury/Documents/GitHub/core-master/instdir/program/oosplash: cannot execute binary file: Exec format error
+./instdir/program/soffice: line 187: exec: /c/Users/drury/Documents/GitHub/core-master/instdir/program/oosplash: cannot execute: Permission denied

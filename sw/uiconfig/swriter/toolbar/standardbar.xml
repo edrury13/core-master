@@ -62,6 +62,7 @@
  <toolbar:toolbaritem xlink:href=".uno:InsertPagebreak"/>
  <toolbar:toolbaritem xlink:href=".uno:InsertFieldCtrl"/>
  <toolbar:toolbaritem xlink:href=".uno:CharmapControl"/>
+ <toolbar:toolbaritem xlink:href=".uno:InsertWhisperText" toolbar:visible="false"/>
  <toolbar:toolbarseparator/>
  <toolbar:toolbaritem xlink:href=".uno:HyperlinkDialog"/>
  <toolbar:toolbaritem xlink:href=".uno:InsertFootnote"/>

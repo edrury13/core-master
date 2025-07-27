@@ -98,7 +98,11 @@ PDFExport::PDFExport( const Reference< XComponent >& rxSrcDoc,
 
     mbIsRedactMode              ( false ),
     maWatermarkColor            ( COL_LIGHTGREEN ),
-    maWatermarkFontName         ( u"Helvetica"_ustr )
+    maWatermarkFontName         ( u"Helvetica"_ustr ),
+    mbExportMeasurementInfo     ( false ),
+    msDrawingUnit               ( u"mm"_ustr ),
+    mfScaleNumerator            ( 1.0 ),
+    mfScaleDenominator          ( 1.0 )
 {
 }
 
@@ -642,6 +646,15 @@ bool PDFExport::Export( const OUString& rFile, const Sequence< PropertyValue >& 
                 }
                 else if ( rProp.Name == "TiledWatermark" )
                     rProp.Value >>= msTiledWatermark;
+                // measurement tools support properties
+                else if ( rProp.Name == "ExportMeasurementInfo" )
+                    rProp.Value >>= mbExportMeasurementInfo;
+                else if ( rProp.Name == "DrawingUnit" )
+                    rProp.Value >>= msDrawingUnit;
+                else if ( rProp.Name == "ScaleNumerator" )
+                    rProp.Value >>= mfScaleNumerator;
+                else if ( rProp.Name == "ScaleDenominator" )
+                    rProp.Value >>= mfScaleDenominator;
                 // now all the security related properties...
                 else if ( rProp.Name == "EncryptFile" )
                     rProp.Value >>= bEncrypt;
@@ -1016,6 +1029,12 @@ bool PDFExport::Export( const OUString& rFile, const Sequence< PropertyValue >& 
             aContext.SignCertificate = std::move(aSignCertificate);
             aContext.SignTSA = sSignTSA;
             aContext.UseReferenceXObject = bUseReferenceXObject;
+            
+            // Measurement tools support
+            aContext.ExportMeasurementInfo = mbExportMeasurementInfo;
+            aContext.DrawingUnit = msDrawingUnit;
+            aContext.ScaleNumerator = mfScaleNumerator;
+            aContext.ScaleDenominator = mfScaleDenominator;
 
             // all context data set, time to create the printing device
             vcl::PDFWriter aPDFWriter( aContext, xEnc );

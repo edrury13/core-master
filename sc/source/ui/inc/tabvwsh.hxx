@@ -37,6 +37,7 @@
 #include <memory>
 #include <map>
 
+namespace sfx2 { class DocumentTimer; }
 class SdrOle2Obj;
 class SfxAbstractTabDialog;
 class SfxBindings;
@@ -194,6 +195,7 @@ private:
     OUString   maScope;
 
     std::unique_ptr<ScDragData> m_pDragData;
+    std::unique_ptr<sfx2::DocumentTimer> m_pDocumentTimer;
     // temporary data for exchange in the used multi-dialog structure
     std::shared_ptr<ScCondFormatDlgData> m_pScCondFormatDlgData;
 
@@ -403,6 +405,9 @@ public:
     void    ExecuteCellFormatDlg( SfxRequest& rReq, const OUString &rTabPage);
 
     bool    GetFunction( OUString& rFuncStr, FormulaError nErrCode );
+    
+    sfx2::DocumentTimer* GetDocumentTimer() { return m_pDocumentTimer.get(); }
+    const sfx2::DocumentTimer* GetDocumentTimer() const { return m_pDocumentTimer.get(); }
 
     void    StartSimpleRefDialog( const OUString& rTitle, const OUString& rInitVal,
                                     bool bCloseOnButtonUp, bool bSingleCell, bool bMultiSelection );

@@ -128,6 +128,7 @@ class SvxZoomItem;
 #define SID_NEWDOC                          (SID_SFX_START + 500)
 #define SID_OPENDOC                         (SID_SFX_START + 501)
 #define SID_OPENREMOTE                      (SID_SFX_START + 517)
+#define SID_OPENFROMGOOGLEDRIVE             (SID_SFX_START + 521)
 #define SID_OPENURL                         (SID_SFX_START + 596)
 #define SID_JUMPTOMARK                      TypedWhichId<SfxStringItem>(SID_SFX_START + 598)
 #define SID_OPENTEMPLATE                    (SID_SFX_START + 594)
@@ -191,6 +192,7 @@ class SvxZoomItem;
 #define SID_FILTER_DATA                     TypedWhichId<SfxUnoAnyItem>(SID_SFX_START + 1375)
 
 #define SID_ATTR_ZOOM                       TypedWhichId<SvxZoomItem>(SID_SVX_START + 0)
+#define SID_DOC_TIMER                       TypedWhichId<SfxStringItem>(SID_SVX_START + 1)
 
 #define SID_EXPLORER_PROPS_START            TypedWhichId<SfxStringItem>(SID_SFX_START + 1410)
 //      SID_EXPLORER_PROPS_END              (SID_SFX_START + 1499)

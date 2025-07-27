@@ -33,6 +33,7 @@
 #include <scmod.hxx>
 #include <appoptio.hxx>
 #include <tabvwsh.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <document.hxx>
 #include <sc.hrc>
 #include <reffact.hxx>
@@ -1105,6 +1106,22 @@ void ScCellShell::Execute( SfxRequest& rReq )
             // Launch navigator.
             GetViewData().GetDispatcher().Execute(
                 SID_NAVIGATOR, SfxCallMode::SYNCHRON|SfxCallMode::RECORD );
+            break;
+            
+        case SID_DOC_TIMER:
+            {
+                ScTabViewShell* pViewSh = GetViewData().GetViewShell();
+                if (pViewSh && pViewSh->GetDocumentTimer())
+                {
+                    if (pViewSh->GetDocumentTimer()->IsActive())
+                        pViewSh->GetDocumentTimer()->Stop();
+                    else
+                        pViewSh->GetDocumentTimer()->Start();
+                    
+                    // Update status bar immediately
+                    rBindings.Invalidate(SID_DOC_TIMER);
+                }
+            }
             break;
 
         case SID_MARKAREA:

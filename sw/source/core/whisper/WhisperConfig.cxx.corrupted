@@ -1,0 +1,128 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#include <whisper/WhisperConfig.hxx>
+#include <com/sun/star/uno/Sequence.hxx>
+#include <com/sun/star/uno/Exception.hpp>
+#include <osl/process.h>
+#include <rtl/ustrbuf.hxx>
+#include <o3tl/environment.hxx>
+#include <sal/log.hxx>
+
+using namespace com::sun::star::uno;
+
+namespace sw::whisper {
+
+namespace {
+    constexpr OUString WHISPER_CONFIG_PATH = u"Office.Writer/Whisper"_ustr;
+    constexpr OUString ENV_VAR_NAME = u"LIBREOFFICE_OPENAI_API_KEY"_ustr;
+}
+
+WhisperConfig::WhisperConfig()
+    : ConfigItem(WHISPER_CONFIG_PATH)
+    , m_sModel(u"whisper-1"_ustr)
+    , m_sLanguage(u"auto"_ustr)
+    , m_fTemperature(0.2)
+{
+    SAL_WARN("sw.whisper", "WhisperConfig constructor - path: " << WHISPER_CONFIG_PATH);
+    
+    try {
+        // Test if configuration is accessible
+        Sequence<OUString> aNames { u"ApiKey"_ustr };
+        Sequence<Any> aValues = GetProperties(aNames);
+        SAL_WARN("sw.whisper", "WhisperConfig - successfully accessed configuration");
+    } catch (const Exception& e) {
+        SAL_WARN("sw.whisper", "WhisperConfig - failed to access configuration: " << e.Message);
+    } catch (...) {
+        SAL_WARN("sw.whisper", "WhisperConfig - failed to access configuration: unknown exception");
+    }
+    
+    // Load saved values
+    Sequence<OUString> aNames = GetPropertyNames();
+    Sequence<Any> aValues = GetProperties(aNames);
+    
+    const Any* pValues = aValues.getConstArray();
+    for (sal_Int32 i = 0; i < aNames.getLength(); ++i)
+    {
+        if (aNames[i] == "Model")
+            pValues[i] >>= m_sModel;
+        else if (aNames[i] == "Language")
+            pValues[i] >>= m_sLanguage;
+        else if (aNames[i] == "Temperature")
+            pValues[i] >>= m_fTemperature;
+    }
+    
+    SAL_WARN("sw.whisper", "WhisperConfig initialized - model: " << m_sModel << ", language: " << m_sLanguage);
+}
+
+WhisperConfig::~WhisperConfig() = default;
+
+void WhisperConfig::Notify(const Sequence<OUString>&) {
+    // Reload configuration
+}
+
+void WhisperConfig::ImplCommit() {
+    Sequence<OUString> aNames = GetPropertyNames();
+    Sequence<Any> aValues(aNames.getLength());
+    
+    Any* pValues = aValues.getArray();
+    for (sal_Int32 i = 0; i < aNames.getLength(); ++i)
+    {
+        if (aNames[i] == "Model")
+            pValues[i] <<= m_sModel;
+        else if (aNames[i] == "Language")
+            pValues[i] <<= m_sLanguage;
+        else if (aNames[i] == "Temperature")
+            pValues[i] <<= m_fTemperature;
+    }
+    
+    PutProperties(aNames, aValues);
+}
+
+Sequence<OUString> WhisperConfig::GetPropertyNames() {
+    return { u"Model"_ustr, u"Language"_ustr, u"Temperature"_ustr };
+}
+
+OUString WhisperConfig::getApiKey() const {
+    // Read from environment variable using the same method as Google Drive
+    OUString apiKey = o3tl::getEnvironment(ENV_VAR_NAME);
+    SAL_WARN("sw.whisper", "WhisperConfig::getApiKey - ENV_VAR_NAME: " << ENV_VAR_NAME << ", API key length: " << apiKey.getLength());
+    return apiKey;
+}
+
+OUString WhisperConfig::getModel() const {
+    return m_sModel;
+}
+
+void WhisperConfig::setModel(const OUString& rModel) {
+    m_sModel = rModel;
+    SetModified();
+}
+
+OUString WhisperConfig::getLanguage() const {
+    return m_sLanguage;
+}
+
+void WhisperConfig::setLanguage(const OUString& rLanguage) {
+    m_sLanguage = rLanguage;
+    SetModified();
+}
+
+double WhisperConfig::getTemperature() const {
+    return m_fTemperature;
+}
+
+void WhisperConfig::setTemperature(double fTemperature) {
+    m_fTemperature = fTemperature;
+    SetModified();
+}
+
+} // namespace sw::whisper
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */

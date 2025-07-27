@@ -1,0 +1,22 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    libx11-6 libxrender1 libxext6 libxtst6 libxi6 \
+    libxinerama1 libxrandr2 libxcursor1 libcairo2 \
+    libcups2 libdbus-1-3 libfontconfig1 libfreetype6 \
+    libgcc-s1 libgl1 libgl1-mesa-glx libsm6 libice6 \
+    libxcomposite1 libxdamage1 libxfixes3 libgtk-3-0 \
+    libglib2.0-0 libharfbuzz0b libpango-1.0-0 \
+    libnss3 libnspr4 dbus-x11 \
+    && apt-get clean
+
+# Create wrapper script that bypasses forking
+RUN echo '#!/bin/bash\n\
+export SAL_DISABLE_OOSPLASH=1\n\
+export SAL_USE_VCLPLUGIN=gen\n\
+export LD_LIBRARY_PATH=/lo/instdir/program:$LD_LIBRARY_PATH\n\
+cd /lo/instdir/program\n\
+exec ./uno.bin -env:UserInstallation=file:///tmp/libre -env:URE_BOOTSTRAP=file:///lo/instdir/program/fundamentalrc -- "$@"' > /usr/local/bin/libreoffice && \
+chmod +x /usr/local/bin/libreoffice
+
+CMD ["/usr/local/bin/libreoffice", "--writer"]

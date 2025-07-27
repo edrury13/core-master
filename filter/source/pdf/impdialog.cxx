@@ -139,6 +139,18 @@ ImpPDFTabDialog::ImpPDFTabDialog(weld::Window* pParent, const Sequence< Property
     if (mbIsWriter)
         mbExportNotesInMargin = maConfigItem.ReadBool( u"ExportNotesInMargin"_ustr, false );
     mbViewPDF = maConfigItem.ReadBool( u"ViewPDFAfterExport"_ustr, false );
+    
+    // Load measurement tools support settings for Draw documents
+    Reference< lang::XServiceInfo > xInfo( rxDoc, UNO_QUERY );
+    bool mbIsDraw = xInfo.is() && xInfo->supportsService( u"com.sun.star.drawing.DrawingDocument"_ustr );
+    if (mbIsDraw)
+    {
+        mbExportMeasurementInfo = maConfigItem.ReadBool( u"ExportMeasurementInfo"_ustr, false );
+        msDrawingUnit = maConfigItem.ReadString( u"DrawingUnit"_ustr, u"mm"_ustr );
+        // Store scale as integers to work with FilterConfigItem limitations
+        mfScaleNumerator = static_cast<double>(maConfigItem.ReadInt32( u"ScaleNumerator"_ustr, 1 ));
+        mfScaleDenominator = static_cast<double>(maConfigItem.ReadInt32( u"ScaleDenominator"_ustr, 1 ));
+    }
 
     mbExportBookmarks = maConfigItem.ReadBool( u"ExportBookmarks"_ustr, true );
     mbExportBookmarksUserSelection = mbExportBookmarks;
@@ -399,6 +411,17 @@ Sequence< PropertyValue > ImpPDFTabDialog::GetFilterData()
     if (mbIsWriter)
         maConfigItem.WriteBool( u"ExportNotesInMargin"_ustr, mbExportNotesInMargin );
     maConfigItem.WriteBool( u"ViewPDFAfterExport"_ustr, mbViewPDF );
+    
+    // Save measurement tools support settings for Draw documents
+    Reference< lang::XServiceInfo > xInfo( mrDoc, UNO_QUERY );
+    bool mbIsDraw = xInfo.is() && xInfo->supportsService( u"com.sun.star.drawing.DrawingDocument"_ustr );
+    if (mbIsDraw)
+    {
+        maConfigItem.WriteBool( u"ExportMeasurementInfo"_ustr, mbExportMeasurementInfo );
+        // WriteString doesn't exist, but the string will be included in the filter data
+        maConfigItem.WriteInt32( u"ScaleNumerator"_ustr, static_cast<sal_Int32>(mfScaleNumerator) );
+        maConfigItem.WriteInt32( u"ScaleDenominator"_ustr, static_cast<sal_Int32>(mfScaleDenominator) );
+    }
 
     maConfigItem.WriteBool( u"ExportBookmarks"_ustr, mbExportBookmarks );
     if ( mbIsPresentation )
@@ -467,6 +490,17 @@ Sequence< PropertyValue > ImpPDFTabDialog::GetFilterData()
     aRet.push_back(comphelper::makePropertyValue(u"SignatureCertificate"_ustr, maSignCertificate));
     aRet.push_back(comphelper::makePropertyValue(u"SignatureTSA"_ustr, msSignTSA));
     aRet.push_back(comphelper::makePropertyValue(u"UseReferenceXObject"_ustr, mbUseReferenceXObject));
+    
+    // Add measurement info to filter data for Draw documents
+    Reference< lang::XServiceInfo > xInfo2( mrDoc, UNO_QUERY );
+    bool mbIsDraw2 = xInfo2.is() && xInfo2->supportsService( u"com.sun.star.drawing.DrawingDocument"_ustr );
+    if (mbIsDraw2 && mbExportMeasurementInfo)
+    {
+        aRet.push_back(comphelper::makePropertyValue(u"ExportMeasurementInfo"_ustr, mbExportMeasurementInfo));
+        aRet.push_back(comphelper::makePropertyValue(u"DrawingUnit"_ustr, msDrawingUnit));
+        aRet.push_back(comphelper::makePropertyValue(u"ScaleNumerator"_ustr, mfScaleNumerator));
+        aRet.push_back(comphelper::makePropertyValue(u"ScaleDenominator"_ustr, mfScaleDenominator));
+    }
 
     return comphelper::concatSequences(maConfigItem.GetFilterData(), comphelper::containerToSequence(aRet));
 }
@@ -515,6 +549,12 @@ ImpPDFTabGeneralPage::ImpPDFTabGeneralPage(weld::Container* pPage, weld::DialogC
     , mxEdWatermark(m_xBuilder->weld_entry(u"watermarkentry"_ustr))
     , mxSlidesFt(m_xBuilder->weld_label(u"slides"_ustr))
     , mxSheetsSelectionFt(m_xBuilder->weld_label(u"selectedsheets"_ustr))
+    , mxCbExportMeasurementInfo(m_xBuilder->weld_check_button(u"exportmeasurement"_ustr))
+    , mxMeasurementFrame(m_xBuilder->weld_widget(u"measurementframe"_ustr))
+    , mxLbDrawingUnit(m_xBuilder->weld_combo_box(u"drawingunit"_ustr))
+    , mxNfScaleNumerator(m_xBuilder->weld_spin_button(u"scalenumerator"_ustr))
+    , mxFtScaleSeparator(m_xBuilder->weld_label(u"scaleseparator"_ustr))
+    , mxNfScaleDenominator(m_xBuilder->weld_spin_button(u"scaledenominator"_ustr))
 {
 }
 
@@ -589,6 +629,39 @@ void ImpPDFTabGeneralPage::SetFilterConfigItem(ImpPDFTabDialog* pParent)
     mxCbWatermark->connect_toggled( LINK( this, ImpPDFTabGeneralPage, ToggleWatermarkHdl ) );
     mxFtWatermark->set_sensitive(false );
     mxEdWatermark->set_sensitive( false );
+    
+    // Setup measurement tools controls for Draw documents
+    bool mbIsDraw = pParent->mrDoc.is() && 
+        Reference< lang::XServiceInfo >(pParent->mrDoc, UNO_QUERY)->supportsService(u"com.sun.star.drawing.DrawingDocument"_ustr);
+    
+    if (mbIsDraw)
+    {
+        mxCbExportMeasurementInfo->show();
+        mxCbExportMeasurementInfo->set_active(pParent->mbExportMeasurementInfo);
+        mxCbExportMeasurementInfo->connect_toggled(LINK(this, ImpPDFTabGeneralPage, ToggleExportMeasurementInfoHdl));
+        
+        // Initialize measurement frame
+        mxMeasurementFrame->set_sensitive(pParent->mbExportMeasurementInfo);
+        
+        // Initialize unit combo box
+        mxLbDrawingUnit->append(u"mm"_ustr, u"Millimeters (mm)"_ustr);
+        mxLbDrawingUnit->append(u"cm"_ustr, u"Centimeters (cm)"_ustr);
+        mxLbDrawingUnit->append(u"m"_ustr, u"Meters (m)"_ustr);
+        mxLbDrawingUnit->append(u"in"_ustr, u"Inches (in)"_ustr);
+        mxLbDrawingUnit->append(u"ft"_ustr, u"Feet (ft)"_ustr);
+        mxLbDrawingUnit->set_active_id(pParent->msDrawingUnit);
+        
+        // Initialize scale ratio
+        mxNfScaleNumerator->set_value(static_cast<sal_Int64>(pParent->mfScaleNumerator));
+        mxNfScaleDenominator->set_value(static_cast<sal_Int64>(pParent->mfScaleDenominator));
+        mxNfScaleNumerator->set_range(1, 10000);
+        mxNfScaleDenominator->set_range(1, 10000);
+    }
+    else
+    {
+        mxCbExportMeasurementInfo->hide();
+        mxMeasurementFrame->hide();
+    }
 
     bool bIsPDFA = false;
     switch (pParent->mnPDFTypeSelection)
@@ -760,6 +833,17 @@ void ImpPDFTabGeneralPage::GetFilterConfigItem( ImpPDFTabDialog* pParent )
     pParent->mbIsSkipEmptyPages = !mxCbExportEmptyPages->get_active();
     pParent->mbIsExportPlaceholders = mxCbExportPlaceholders->get_active();
     pParent->mbAddStream = mxCbAddStream->get_visible() && mxCbAddStream->get_active();
+    
+    // Get measurement info settings for Draw documents
+    bool mbIsDraw = pParent->mrDoc.is() && 
+        Reference< lang::XServiceInfo >(pParent->mrDoc, UNO_QUERY)->supportsService(u"com.sun.star.drawing.DrawingDocument"_ustr);
+    if (mbIsDraw)
+    {
+        pParent->mbExportMeasurementInfo = mxCbExportMeasurementInfo->get_active();
+        pParent->msDrawingUnit = mxLbDrawingUnit->get_active_id();
+        pParent->mfScaleNumerator = static_cast<double>(mxNfScaleNumerator->get_value());
+        pParent->mfScaleDenominator = static_cast<double>(mxNfScaleDenominator->get_value());
+    }
 
     pParent->mbIsPageRangeChecked = false;
     if( mxRbPageRange->get_active() )
@@ -911,6 +995,11 @@ IMPL_LINK_NOARG(ImpPDFTabGeneralPage, ToggleWatermarkHdl, weld::Toggleable&, voi
     mxFtWatermark->set_sensitive(mxCbWatermark->get_active());
     if (mxCbWatermark->get_active())
         mxEdWatermark->grab_focus();
+}
+
+IMPL_LINK_NOARG(ImpPDFTabGeneralPage, ToggleExportMeasurementInfoHdl, weld::Toggleable&, void)
+{
+    mxMeasurementFrame->set_sensitive(mxCbExportMeasurementInfo->get_active());
 }
 
 IMPL_LINK_NOARG(ImpPDFTabGeneralPage, ToggleAddStreamHdl, weld::Toggleable&, void)

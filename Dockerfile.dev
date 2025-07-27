@@ -1,0 +1,53 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install essential build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    autoconf \
+    automake \
+    libtool \
+    pkg-config \
+    python3-dev \
+    bison \
+    flex \
+    libx11-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libgtk-3-dev \
+    libcups2-dev \
+    libfontconfig1-dev \
+    zip \
+    ccache \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a user that matches the host UID/GID for Windows
+RUN useradd -m -s /bin/bash -u 1000 developer && \
+    echo "developer ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set up ccache
+ENV CCACHE_DIR=/home/developer/.ccache
+ENV PATH="/usr/lib/ccache:${PATH}"
+
+# Create directories for build artifacts
+RUN mkdir -p /build && chown developer:developer /build
+
+USER developer
+WORKDIR /build
+
+# Create initial build script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Copying source files..."\n\
+cp -r /core/* /build/\n\
+echo "Running autogen.sh..."\n\
+./autogen.sh --without-java --without-help --without-myspell-dicts --with-parallelism=4\n\
+echo "Building LibreOffice..."\n\
+make -j4\n\
+echo "Build complete! Run with: /build/instdir/program/soffice"' > /home/developer/build-libreoffice.sh && \
+chmod +x /home/developer/build-libreoffice.sh
+
+CMD ["/bin/bash"]

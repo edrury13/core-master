@@ -22,6 +22,7 @@
 #include <sfx2/passwd.hxx>
 #include <sfx2/request.hxx>
 #include <sfx2/sidebar/Sidebar.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <svl/ptitem.hxx>
 #include <svl/stritem.hxx>
 #include <tools/urlobj.hxx>
@@ -1560,6 +1561,7 @@ void ScTabViewShell::Execute( SfxRequest& rReq )
                 rReq.Done();
             }
             break;
+
 
         default:
             OSL_FAIL("Unknown Slot at ScTabViewShell::Execute");

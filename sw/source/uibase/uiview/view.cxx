@@ -101,6 +101,7 @@
 
 #include <formatclipboard.hxx>
 #include <PostItMgr.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <annotsh.hxx>
 #include <swruler.hxx>
 #include <svx/theme/ThemeColorChangerCommon.hxx>
@@ -1005,6 +1006,7 @@ SwView::SwView(SfxViewFrame& _rFrame, SfxViewShell* pOldSh)
     // Set DocShell
     m_xGlueDocShell.reset(new SwViewGlueDocShell(*this, rDocSh));
     m_pPostItMgr.reset(new SwPostItMgr(this));
+    m_pDocumentTimer.reset(new sfx2::DocumentTimer(this));
 #if ENABLE_YRS
     m_pWrtShell->GetDoc()->getIDocumentState().YrsInitAcceptor();
 #endif
@@ -1936,6 +1938,7 @@ bool SwView::PrepareClose( bool bUI )
     {
         return false;
     }
+    
     return SfxViewShell::PrepareClose( bUI );
 }
 

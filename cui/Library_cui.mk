@@ -71,6 +71,7 @@ $(eval $(call gb_Library_use_externals,cui,\
 	boost_headers \
 	$(call gb_Helper_optional,OPENCL,\
 		clew) \
+    curl \
     icuuc \
     icu_headers \
     libxml2 \
@@ -127,6 +128,9 @@ $(eval $(call gb_Library_add_exception_objects,cui,\
     cui/source/dialogs/dlgname \
     cui/source/dialogs/DiagramDialog \
     cui/source/dialogs/FontFeaturesDialog \
+    cui/source/dialogs/GoogleDriveAuthService \
+    cui/source/dialogs/GoogleDriveFilePicker \
+    cui/source/dialogs/GoogleDriveFilePickerService \
     cui/source/dialogs/hangulhanjadlg \
     cui/source/dialogs/hldocntp \
     cui/source/dialogs/hldoctp \

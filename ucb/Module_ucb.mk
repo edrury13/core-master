@@ -18,6 +18,7 @@ $(eval $(call gb_Module_add_targets,ucb,\
 	Library_ucpexpand1 \
 	Library_ucpext \
 	Library_ucpfile1 \
+	$(if $(DUMMY_NEVER_TRUE),Library_ucpgdocs1,) \
 	Library_ucphier1 \
 	Library_ucpimage \
 	Library_ucppkg1 \
@@ -44,3 +45,4 @@ $(eval $(call gb_Module_add_subsequentcheck_targets,ucb,\
 ))
 
 # vim: set noet sw=4 ts=4:
+

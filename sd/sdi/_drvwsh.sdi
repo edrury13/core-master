@@ -1702,7 +1702,17 @@ interface DrawView
         ExecMethod = ExecStatusBar ;
         StateMethod = GetStatusBarState ;
     ]
+    SID_DOC_TIMER // ole : no, status : ?
+    [
+        ExecMethod = ExecStatusBar ;
+        StateMethod = GetStatusBarState ;
+    ]
     SID_STATUS_LAYOUT // ole : no, status : ?
+    [
+        ExecMethod = ExecStatusBar ;
+        StateMethod = GetStatusBarState ;
+    ]
+    SID_DOC_TIMER // ole : no, status : ?
     [
         ExecMethod = ExecStatusBar ;
         StateMethod = GetStatusBarState ;

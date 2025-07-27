@@ -39,6 +39,7 @@ Create a `Dockerfile` in this directory:
 
 ```dockerfile
 # Dockerfile - Ubuntu-based LibreOffice build environment
+# Note: LibreOffice requires GCC 12+ (Ubuntu 22.04 needs PPA, Ubuntu 24.04 has it by default)
 FROM ubuntu:22.04
 
 # Prevent interactive prompts during package installation

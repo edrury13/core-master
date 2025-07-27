@@ -177,6 +177,14 @@ private:
 
     sal_Int32 mnArcNum;
     PropertyMap maExtrusionPropertyMap;
+    
+    void applyGradientFillProperties(
+        const css::uno::Reference<css::beans::XPropertySet>& xPropSet,
+        PropertyMap& rPropertyMap);
+    
+    void adjustTextFrameInsets(
+        css::drawing::EnhancedCustomShapeTextFrame& rTextFrame,
+        const css::awt::Size& rShapeSize);
 };
 
 }

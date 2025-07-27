@@ -289,6 +289,7 @@ $(eval $(call gb_UIConfig_add_uifiles,modules/swriter,\
 	sw/uiconfig/swriter/ui/pagefooterpanel \
 	sw/uiconfig/swriter/ui/commentspanel \
 	sw/uiconfig/swriter/ui/commentsthread \
+	sw/uiconfig/swriter/ui/documentstatisticspanel \
 	sw/uiconfig/swriter/ui/commentwidget \
 	sw/uiconfig/swriter/ui/commentcontextmenu \
 	sw/uiconfig/swriter/ui/a11ycheckissuespanel \
@@ -335,6 +336,7 @@ $(eval $(call gb_UIConfig_add_uifiles,modules/swriter,\
 	sw/uiconfig/swriter/ui/wrapdialog \
 	sw/uiconfig/swriter/ui/wrappage \
 	sw/uiconfig/swriter/ui/zoombox \
+	sw/uiconfig/swriter/ui/whispersettingsdialog \
 ))
 
 # vim: set noet sw=4 ts=4:

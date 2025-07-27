@@ -32,6 +32,7 @@
 #include "WrapPropertyPanel.hxx"
 #include "WriterInspectorTextPanel.hxx"
 #include "TableEditPanel.hxx"
+#include "DocumentStatisticsPanel.hxx"
 #include <navipi.hxx>
 #include <redlndlg.hxx>
 
@@ -223,6 +224,15 @@ Reference<ui::XUIElement> SAL_CALL SwPanelFactory::createUIElement (
             = sw::sidebar::QuickFindPanel::Create(pParent, xFrame);
         xElement = sfx2::sidebar::SidebarPanelBase::Create(rsResourceURL, xFrame, std::move(xPanel),
                                                            ui::LayoutSize(-1, -1, -1));
+    }
+    else if (rsResourceURL.endsWith("/DocumentStatisticsPanel"))
+    {
+        std::unique_ptr<PanelLayout> xPanel = sw::sidebar::DocumentStatisticsPanel::Create(pParent, pBindings);
+        xElement = sfx2::sidebar::SidebarPanelBase::Create(
+            rsResourceURL,
+            xFrame,
+            std::move(xPanel),
+            ui::LayoutSize(-1, -1, -1));
     }
 
     return xElement;

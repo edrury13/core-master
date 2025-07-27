@@ -146,6 +146,12 @@ class ImpPDFTabDialog final : public SfxTabDialogController
     OUString msSignTSA;
 
     OUString maWatermarkText;
+    
+    // Measurement tools support
+    bool mbExportMeasurementInfo = false;
+    OUString msDrawingUnit = u"mm"_ustr;
+    double mfScaleNumerator = 1.0;
+    double mfScaleDenominator = 1.0;
 
 public:
 
@@ -219,6 +225,14 @@ class ImpPDFTabGeneralPage : public SfxTabPage
     std::unique_ptr<weld::Entry> mxEdWatermark;
     std::unique_ptr<weld::Label> mxSlidesFt;
     std::unique_ptr<weld::Label> mxSheetsSelectionFt;
+    
+    // Measurement tools support controls
+    std::unique_ptr<weld::CheckButton> mxCbExportMeasurementInfo;
+    std::unique_ptr<weld::Widget> mxMeasurementFrame;
+    std::unique_ptr<weld::ComboBox> mxLbDrawingUnit;
+    std::unique_ptr<weld::SpinButton> mxNfScaleNumerator;
+    std::unique_ptr<weld::Label> mxFtScaleSeparator;
+    std::unique_ptr<weld::SpinButton> mxNfScaleDenominator;
 
     DECL_LINK(ToggleAllHdl, weld::Toggleable&, void);
     DECL_LINK(TogglePagesHdl, weld::Toggleable&, void);
@@ -230,6 +244,7 @@ class ImpPDFTabGeneralPage : public SfxTabPage
     DECL_LINK(ToggleAddStreamHdl, weld::Toggleable&, void);
     DECL_LINK(ToggleExportFormFieldsHdl, weld::Toggleable&, void);
     DECL_LINK(ToggleExportNotesPagesHdl, weld::Toggleable&, void);
+    DECL_LINK(ToggleExportMeasurementInfoHdl, weld::Toggleable&, void);
 
     void                        TogglePagesHdl();
     void                        ToggleSheetsHdl();

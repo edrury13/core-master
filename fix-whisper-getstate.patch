@@ -1,0 +1,19 @@
+--- a/sw/source/uibase/shells/textsh1.cxx
++++ b/sw/source/uibase/shells/textsh1.cxx
+@@ -4089,6 +4089,16 @@ void SwTextShell::GetState( SfxItemSet &rSet )
+         case FN_INC_INDENT_OFFSET:
+         case FN_DEC_INDENT_OFFSET:
+             break;
++            
++        case FN_INSERT_WHISPER_TEXT:
++        case FN_WHISPER_START_STOP:
++        case FN_WHISPER_SETTINGS:
++            {
++                // Handle Whisper commands
++                GetWhisperState(rSet);
++                nWhich = 0; // Skip to next which
++            }
++            break;
+ 
+         default:
+             if(nWhich < RES_FRMATR_END)

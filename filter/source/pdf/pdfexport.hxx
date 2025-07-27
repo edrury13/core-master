@@ -58,6 +58,12 @@ private:
     OUString            maWatermarkFontName;
     std::optional<Degree10> moWatermarkRotateAngle;
     OUString            msTiledWatermark;
+    
+    // Measurement tools support
+    bool                mbExportMeasurementInfo;
+    OUString            msDrawingUnit;
+    double              mfScaleNumerator;
+    double              mfScaleDenominator;
 
     void                ImplExportPage( vcl::PDFWriter& rWriter, vcl::PDFExtOutDevData& rPDFExtOutDevData,
                                         const GDIMetaFile& rMtf );

@@ -343,6 +343,10 @@ class SwUINumRuleItem;
 #define FN_DELETE_SECTIONS (FN_INSERT2 + 41)
 #define FN_DELETE_CONTENT_CONTROL (FN_INSERT2 + 42) /* Delete content control formatting */
 #define FN_INSERT_FLD_RANGE_PGCOUNT (FN_INSERT2 + 43) /*insert field page count in range*/
+// OpenAI Whisper Speech-to-Text
+#define FN_INSERT_WHISPER_TEXT      (FN_INSERT2 + 44)
+#define FN_WHISPER_START_STOP       (FN_INSERT2 + 45)
+#define FN_WHISPER_SETTINGS         (FN_INSERT2 + 46)
 
 // Region: Format
 #define FN_AUTOFORMAT_APPLY     (FN_FORMAT + 1 ) /* apply autoformat options */
@@ -888,6 +892,7 @@ class SwUINumRuleItem;
 #define FN_STAT_BOOKMARK            TypedWhichId<SfxUInt16Item>(FN_STAT + 8)  /* For Popup Bookmarks*/
 #define FN_STAT_WORDCOUNT           TypedWhichId<SfxStringItem>(FN_STAT + 9)
 #define FN_STAT_ACCESSIBILITY_CHECK (FN_STAT + 10)
+#define FN_STAT_DOCTIMER            TypedWhichId<SfxStringItem>(FN_STAT + 11)
 
 // Region: Page preview
 #define FN_SHOW_TWO_PAGES           (FN_PGPREVIEW + 1)
@@ -923,6 +928,7 @@ class SwUINumRuleItem;
 #define SID_ATTR_PAGE_FOOTER_SPACING    TypedWhichId<SvxLongULSpaceItem>(FN_SIDEBAR + 9)
 #define SID_ATTR_PAGE_FOOTER_LAYOUT     TypedWhichId<SfxInt16Item>(FN_SIDEBAR + 10)
 #define SID_ATTR_PAGE_MARGIN            (FN_SIDEBAR + 11)
+#define FN_SHOW_DOCUMENT_STATISTICS     (FN_SIDEBAR + 12)
 
 //Member IDs for Fill / SetVariable of items
 #define         MID_STYLE       0xe0

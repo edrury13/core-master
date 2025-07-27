@@ -117,6 +117,32 @@ namespace oox::ppt {
 
     typedef ::std::vector< TimeAnimationValue > TimeAnimationValueList;
 
+    /** Motion path properties for animation */
+    struct MotionPathProperties
+    {
+        OUString maPath;           // Motion path string
+        sal_Int32 mnOrigin = 0;    // Origin type
+        
+        /** Convert PowerPoint path to SVG path format */
+        void convertToSvgPath(OUString& rSvgPath) const;
+        
+        /** Apply motion path to animation node */
+        void applyToAnimationNode(const css::uno::Reference<css::animations::XAnimationNode>& xNode) const;
+    };
+
+    /** Animation timing utilities */
+    struct AnimationTiming
+    {
+        /** Convert duration string to seconds */
+        static double convertDuration(const OUString& rDuration);
+        
+        /** Fix common timing issues in animation nodes */
+        static void fixNodeTiming(const css::uno::Reference<css::animations::XAnimationNode>& xNode);
+        
+        /** Calculate end time of an animation node */
+        static double calculateNodeEndTime(const css::uno::Reference<css::animations::XAnimationNode>& xNode);
+    };
+
 }
 
 

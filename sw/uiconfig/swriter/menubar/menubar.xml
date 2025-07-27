@@ -22,6 +22,7 @@
       <menu:menuitem menu:id=".uno:AddDirect"/>
       <menu:menuitem menu:id=".uno:OpenFromWriter"/>
       <menu:menuitem menu:id=".uno:OpenRemote" menu:style="text"/>
+      <menu:menuitem menu:id=".uno:OpenFromGoogleDrive" menu:style="text"/>
       <menu:menuitem menu:id=".uno:RecentFileList"/>
       <menu:menuitem menu:id=".uno:CloseDoc"/>
       <menu:menuseparator/>
@@ -232,6 +233,7 @@
       <menu:menuitem menu:id=".uno:ViewSidebarStyles"/>
       <menu:menuitem menu:id=".uno:Gallery"/>
       <menu:menuitem menu:id=".uno:Navigator"/>
+      <menu:menuitem menu:id=".uno:ShowDocumentStatisticsPanel"/>
       <menu:menuitem menu:id=".uno:ViewDataSourceBrowser"/>
       <menu:menuseparator/>
       <menu:menuitem menu:id=".uno:FullScreen"/>
@@ -337,6 +339,15 @@
           <menu:menuitem menu:id=".uno:InsertWJ"/>
           <menu:menuitem menu:id=".uno:InsertLRM"/>
           <menu:menuitem menu:id=".uno:InsertRLM"/>
+        </menu:menupopup>
+      </menu:menu>
+      <menu:menuseparator/>
+      <menu:menu menu:id=".uno:WhisperMenu">
+        <menu:menupopup>
+          <menu:menuitem menu:id=".uno:InsertWhisperText"/>
+          <menu:menuitem menu:id=".uno:WhisperStartStop"/>
+          <menu:menuseparator/>
+          <menu:menuitem menu:id=".uno:WhisperSettings"/>
         </menu:menupopup>
       </menu:menu>
       <menu:menuseparator/>

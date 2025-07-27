@@ -211,6 +211,8 @@ public:
     void            FuDeleteSelectedObjects();
     void            FuSupportRotate(SfxRequest const & rReq);
     void            FuTable(SfxRequest& rReq);
+    
+    void            InsertFormControl(SfxRequest& rReq);
 
     void            AttrExec (SfxRequest& rReq);
     void            AttrState (SfxItemSet& rSet);

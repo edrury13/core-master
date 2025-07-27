@@ -710,6 +710,12 @@ public:
         OUString                        SignTSA;
         /// Use reference XObject markup for PDF images.
         bool                            UseReferenceXObject;
+        
+        // Measurement tools support
+        bool                            ExportMeasurementInfo;
+        OUString                        DrawingUnit;
+        double                          ScaleNumerator;
+        double                          ScaleDenominator;
 
         PDFWriterContext() :
                 RelFsys( false ), //i56629, i49415?, i64585?
@@ -739,7 +745,11 @@ public:
                 DPIx( 0 ),
                 DPIy( 0 ),
                 ColorMode( PDFWriter::DrawColor ),
-                UseReferenceXObject( false )
+                UseReferenceXObject( false ),
+                ExportMeasurementInfo( false ),
+                DrawingUnit( u"mm"_ustr ),
+                ScaleNumerator( 1.0 ),
+                ScaleDenominator( 1.0 )
         {}
     };
 

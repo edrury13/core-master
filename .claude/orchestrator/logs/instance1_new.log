@@ -1,0 +1,376 @@
+I understand the permission issue. Let me proceed by creating the implementation for all the files. I'll start with creating the content for each file:
+
+**gdocs_provider.hxx:**
+```cpp
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#pragma once
+
+#include <com/sun/star/beans/Property.hpp>
+#include <com/sun/star/lang/XSingleServiceFactory.hpp>
+#include <com/sun/star/lang/XMultiServiceFactory.hpp>
+#include <ucbhelper/providerhelper.hxx>
+#include <map>
+#include <memory>
+
+namespace gdocs
+{
+
+class GDocsSession;
+
+class ContentProvider : public ::ucbhelper::ContentProviderImplHelper
+{
+private:
+    std::map< std::pair< OUString, OUString >, std::shared_ptr<GDocsSession> > m_aSessionCache;
+
+public:
+    explicit ContentProvider( const css::uno::Reference< css::uno::XComponentContext >& rxContext );
+    virtual ~ContentProvider() override;
+
+    // XInterface
+    virtual css::uno::Any SAL_CALL queryInterface( const css::uno::Type & rType ) override;
+    virtual void SAL_CALL acquire()
+        noexcept override;
+    virtual void SAL_CALL release()
+        noexcept override;
+
+    // XTypeProvider
+    virtual css::uno::Sequence< sal_Int8 > SAL_CALL getImplementationId() override;
+    virtual css::uno::Sequence< css::uno::Type > SAL_CALL getTypes() override;
+
+    // XServiceInfo
+    virtual OUString SAL_CALL getImplementationName() override;
+    virtual sal_Bool SAL_CALL supportsService( const OUString& ServiceName ) override;
+    virtual css::uno::Sequence< OUString > SAL_CALL getSupportedServiceNames() override;
+
+    // XContentProvider
+    virtual css::uno::Reference< css::ucb::XContent > SAL_CALL
+    queryContent( const css::uno::Reference< css::ucb::XContentIdentifier >& Identifier ) override;
+
+    std::shared_ptr<GDocsSession> getSession( const OUString& sUrl, const OUString& sUsername );
+    void registerSession( const OUString& sUrl, const OUString& sUsername, std::shared_ptr<GDocsSession> pSession );
+};
+
+}
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+```
+
+**gdocs_auth.hxx:**
+```cpp
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#pragma once
+
+#include <rtl/ustring.hxx>
+#include <com/sun/star/uno/Reference.hxx>
+#include <com/sun/star/uno/XComponentContext.hpp>
+#include <memory>
+#include <string>
+#include <map>
+
+namespace gdocs
+{
+
+class OAuth2Handler
+{
+public:
+    OAuth2Handler();
+    ~OAuth2Handler();
+
+    bool authenticate(const OUString& sClientId, const OUString& sClientSecret);
+    OUString getAccessToken() const { return m_sAccessToken; }
+    OUString getRefreshToken() const { return m_sRefreshToken; }
+    bool refreshAccessToken();
+    bool isAuthenticated() const { return !m_sAccessToken.isEmpty(); }
+
+private:
+    OUString m_sAccessToken;
+    OUString m_sRefreshToken;
+    OUString m_sClientId;
+    OUString m_sClientSecret;
+    
+    static constexpr const char* GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+    static constexpr const char* GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+    static constexpr const char* GOOGLE_SCOPE = "https://www.googleapis.com/auth/drive";
+    
+    OUString buildAuthorizationUrl();
+    bool exchangeCodeForToken(const OUString& sCode);
+};
+
+class GDocsSession
+{
+public:
+    GDocsSession(const css::uno::Reference< css::uno::XComponentContext >& rxContext);
+    ~GDocsSession();
+
+    bool connect(const OUString& sUsername);
+    bool isConnected() const { return m_bConnected; }
+    OUString getAccessToken() const;
+    
+    std::map<OUString, OUString> getFileList();
+    bool downloadFile(const OUString& sFileId, const OUString& sLocalPath);
+    bool uploadFile(const OUString& sLocalPath, const OUString& sTitle, const OUString& sParentId = OUString());
+    bool createFolder(const OUString& sName, const OUString& sParentId = OUString());
+    bool deleteFile(const OUString& sFileId);
+
+private:
+    css::uno::Reference< css::uno::XComponentContext > m_xContext;
+    std::unique_ptr<OAuth2Handler> m_pOAuth2;
+    bool m_bConnected;
+    OUString m_sUsername;
+    
+    static constexpr const char* GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3";
+};
+
+}
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+```
+
+**gdocs_content.hxx:**
+```cpp
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#pragma once
+
+#include <com/sun/star/io/XInputStream.hpp>
+#include <com/sun/star/io/XOutputStream.hpp>
+#include <com/sun/star/ucb/ContentCreationException.hpp>
+#include <com/sun/star/ucb/OpenCommandArgument2.hpp>
+#include <com/sun/star/ucb/TransferInfo.hpp>
+#include <com/sun/star/ucb/XContentCreator.hpp>
+#include <ucbhelper/contenthelper.hxx>
+#include <memory>
+
+namespace com::sun::star::beans { struct Property; }
+namespace com::sun::star::beans { struct PropertyValue; }
+namespace com::sun::star::sdbc { class XRow; }
+namespace com::sun::star::ucb { struct OpenCommandArgument2; }
+namespace com::sun::star::ucb { struct TransferInfo; }
+
+namespace gdocs
+{
+
+class ContentProvider;
+class GDocsSession;
+
+#define GDOCS_FILE_TYPE      "application/vnd.google-apps.file"
+#define GDOCS_FOLDER_TYPE    "application/vnd.google-apps.folder"
+
+class Content : public ::ucbhelper::ContentImplHelper,
+                public css::ucb::XContentCreator
+{
+    enum ResourceType
+    {
+        UNKNOWN,
+        FILE,
+        FOLDER
+    };
+
+    ContentProvider* m_pProvider;
+    std::shared_ptr<GDocsSession> m_pSession;
+    OUString m_sURL;
+    OUString m_sFileId;
+    OUString m_sTitle;
+    OUString m_sMimeType;
+    ResourceType m_eType;
+    bool m_bTransient;
+
+    void resetAuthProvider();
+    
+private:
+    virtual css::uno::Sequence< css::beans::Property >
+    getProperties( const css::uno::Reference< css::ucb::XCommandEnvironment > & xEnv ) override;
+    virtual css::uno::Sequence< css::ucb::CommandInfo >
+    getCommands( const css::uno::Reference< css::ucb::XCommandEnvironment > & xEnv ) override;
+    virtual OUString getParentURL() override;
+
+    css::uno::Reference< css::sdbc::XRow >
+        getPropertyValues( const css::uno::Sequence< css::beans::Property >& rProperties,
+                           const css::uno::Reference< css::ucb::XCommandEnvironment >& xEnv );
+
+    css::uno::Sequence< css::uno::Any >
+        setPropertyValues( const css::uno::Sequence< css::beans::PropertyValue >& rValues,
+                           const css::uno::Reference< css::ucb::XCommandEnvironment >& xEnv );
+
+    void insert( const css::uno::Reference< css::io::XInputStream > & xInputStream,
+                 bool bReplaceExisting,
+                 const css::uno::Reference< css::ucb::XCommandEnvironment >& Environment );
+
+    void transfer( const css::ucb::TransferInfo& rTransferInfo,
+                   const css::uno::Reference< css::ucb::XCommandEnvironment > & xEnv );
+
+    void destroy( bool bDeletePhysical );
+
+    bool isFolder( const css::uno::Reference< css::ucb::XCommandEnvironment >& xEnv );
+
+    css::uno::Any open( const css::ucb::OpenCommandArgument2& rArg,
+                        const css::uno::Reference< css::ucb::XCommandEnvironment >& xEnv );
+
+    void copyData( const css::uno::Reference< css::io::XInputStream >& xIn,
+                   const css::uno::Reference< css::io::XOutputStream >& xOut );
+
+    css::uno::Any getBadArgExcept();
+
+public:
+    Content( const css::uno::Reference< css::uno::XComponentContext >& rxContext,
+             ContentProvider* pProvider,
+             const css::uno::Reference< css::ucb::XContentIdentifier >& Identifier);
+
+    Content( const css::uno::Reference< css::uno::XComponentContext >& rxContext,
+             ContentProvider* pProvider,
+             const css::uno::Reference< css::ucb::XContentIdentifier >& Identifier,
+             bool bIsFolder);
+
+    virtual ~Content() override;
+
+    // XInterface
+    virtual css::uno::Any SAL_CALL queryInterface( const css::uno::Type & rType ) override;
+    virtual void SAL_CALL acquire() noexcept override;
+    virtual void SAL_CALL release() noexcept override;
+
+    // XTypeProvider
+    virtual css::uno::Sequence< sal_Int8 > SAL_CALL getImplementationId() override;
+    virtual css::uno::Sequence< css::uno::Type > SAL_CALL getTypes() override;
+
+    // XServiceInfo
+    virtual OUString SAL_CALL getImplementationName() override;
+    virtual css::uno::Sequence< OUString > SAL_CALL getSupportedServiceNames() override;
+
+    // XContent
+    virtual OUString SAL_CALL getContentType() override;
+
+    // XCommandProcessor
+    virtual css::uno::Any SAL_CALL execute( const css::ucb::Command& aCommand,
+                                             sal_Int32 CommandId,
+                                             const css::uno::Reference< css::ucb::XCommandEnvironment >& Environment ) override;
+    virtual void SAL_CALL abort( sal_Int32 CommandId ) override;
+
+    // XContentCreator
+    virtual css::uno::Sequence< css::ucb::ContentInfo > SAL_CALL
+        queryCreatableContentsInfo() override;
+    virtual css::uno::Reference< css::ucb::XContent > SAL_CALL
+        createNewContent( const css::ucb::ContentInfo& Info ) override;
+
+    bool isFolder();
+    void setSession( std::shared_ptr<GDocsSession> pSession );
+};
+
+}
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+```
+
+**gdocs_datasupplier.hxx:**
+```cpp
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#pragma once
+
+#include <vector>
+#include <ucbhelper/resultset.hxx>
+
+namespace gdocs
+{
+
+struct ResultListEntry
+{
+    OUString aURL;
+    OUString aTitle;
+    OUString aId;
+    OUString aMimeType;
+    css::uno::Reference< css::ucb::XContentIdentifier > xId;
+    css::uno::Reference< css::ucb::XContent > xContent;
+    css::uno::Reference< css::sdbc::XRow > xRow;
+};
+
+class Content;
+
+class DataSupplier : public ucbhelper::ResultSetDataSupplier
+{
+private:
+    rtl::Reference< Content > m_xContent;
+    sal_Int32 m_nOpenMode;
+    bool m_bCountFinal;
+    std::vector< ResultListEntry > m_aResults;
+
+public:
+    DataSupplier( const rtl::Reference< Content >& rContent, sal_Int32 nOpenMode );
+    virtual ~DataSupplier() override;
+
+    virtual OUString queryContentIdentifierString( sal_uInt32 nIndex ) override;
+    virtual css::uno::Reference< css::ucb::XContentIdentifier >
+        queryContentIdentifier( sal_uInt32 nIndex ) override;
+    virtual css::uno::Reference< css::ucb::XContent >
+        queryContent( sal_uInt32 nIndex ) override;
+
+    virtual bool getResult( sal_uInt32 nIndex ) override;
+
+    virtual sal_uInt32 totalCount() override;
+    virtual sal_uInt32 currentCount() override;
+    virtual bool isCountFinal() override;
+
+    virtual css::uno::Reference< css::sdbc::XRow >
+        queryPropertyValues( sal_uInt32 nIndex  ) override;
+    virtual void releasePropertyValues( sal_uInt32 nIndex ) override;
+
+    virtual void close() override;
+
+    virtual void validate() override;
+};
+
+}
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+```
+
+**ucpgdocs1.component:**
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ -->
+
+<component loader="com.sun.star.loader.SharedLibrary" environment="@CPPU_ENV@"
+    xmlns="http://openoffice.org/2010/uno-components">
+  <implementation name="com.sun.star.comp.GDocsContentProvider"
+    constructor="ucb_gdocs_ContentProvider_get_implementation" single-instance="true">
+    <service name="com.sun.star.ucb.GDocsContentProvider"/>
+  </implementation>
+</component>
+```
+
+Now I'll provide the implementation files. Would you like me to continue with the .cxx implementation files for each of these headers?

@@ -1231,6 +1231,11 @@
           <value xml:lang="en-US">Slide/Layer</value>
         </prop>
       </node>
+      <node oor:name=".uno:StateDocTimer" oor:op="replace">
+        <prop oor:name="Label" oor:type="xs:string">
+          <value xml:lang="en-US">Document Timer</value>
+        </prop>
+      </node>
       <node oor:name=".uno:LayoutStatus" oor:op="replace">
         <prop oor:name="Label" oor:type="xs:string">
           <value xml:lang="en-US">Layout</value>

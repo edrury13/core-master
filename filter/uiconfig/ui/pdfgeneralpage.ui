@@ -10,6 +10,20 @@
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="adjustment2">
+    <property name="lower">1</property>
+    <property name="upper">10000</property>
+    <property name="value">1</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adjustment3">
+    <property name="lower">1</property>
+    <property name="upper">10000</property>
+    <property name="value">1</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <!-- n-columns=2 n-rows=1 -->
   <object class="GtkGrid" id="PdfGeneralPage">
     <property name="visible">True</property>
@@ -512,6 +526,168 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkFrame" id="measurementinfoframe">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label-xalign">0</property>
+            <property name="shadow-type">none</property>
+            <child>
+              <!-- n-columns=1 n-rows=2 -->
+              <object class="GtkGrid" id="grid8">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-start">12</property>
+                <property name="margin-top">6</property>
+                <property name="row-spacing">3</property>
+                <property name="column-spacing">6</property>
+                <child>
+                  <object class="GtkCheckButton" id="exportmeasurement">
+                    <property name="label" translatable="yes" context="pdfgeneralpage|exportmeasurement">Export measurement _info</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="halign">start</property>
+                    <property name="use-underline">True</property>
+                    <property name="draw-indicator">True</property>
+                    <child internal-child="accessible">
+                      <object class="AtkObject" id="exportmeasurement-atkobject">
+                        <property name="AtkObject::accessible-description" translatable="yes" context="pdfgeneralpage|extended_tip|exportmeasurement">Exports scale and measurement metadata to enable PDF measurement tools.</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkGrid" id="measurementframe">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-start">18</property>
+                    <property name="row-spacing">3</property>
+                    <property name="column-spacing">6</property>
+                    <child>
+                      <object class="GtkLabel" id="unitlabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes" context="pdfgeneralpage|unitlabel">Unit:</property>
+                        <property name="use-underline">True</property>
+                        <property name="mnemonic-widget">drawingunit</property>
+                        <property name="xalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="drawingunit">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="valign">center</property>
+                        <child internal-child="accessible">
+                          <object class="AtkObject" id="drawingunit-atkobject">
+                            <property name="AtkObject::accessible-description" translatable="yes" context="pdfgeneralpage|extended_tip|drawingunit">Select the measurement unit for the drawing.</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="scalelabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes" context="pdfgeneralpage|scalelabel">Scale:</property>
+                        <property name="use-underline">True</property>
+                        <property name="mnemonic-widget">scalenumerator</property>
+                        <property name="xalign">0</property>
+                        <property name="margin-start">12</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">2</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="scalenumerator">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="text">1</property>
+                        <property name="adjustment">adjustment2</property>
+                        <property name="numeric">True</property>
+                        <property name="value">1</property>
+                        <child internal-child="accessible">
+                          <object class="AtkObject" id="scalenumerator-atkobject">
+                            <property name="AtkObject::accessible-description" translatable="yes" context="pdfgeneralpage|extended_tip|scalenumerator">Enter the scale numerator (drawing units).</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">3</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="scaleseparator">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes" context="pdfgeneralpage|scaleseparator">:</property>
+                        <property name="xalign">0.5</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">4</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="scaledenominator">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="text">1</property>
+                        <property name="adjustment">adjustment3</property>
+                        <property name="numeric">True</property>
+                        <property name="value">1</property>
+                        <child internal-child="accessible">
+                          <object class="AtkObject" id="scaledenominator-atkobject">
+                            <property name="AtkObject::accessible-description" translatable="yes" context="pdfgeneralpage|extended_tip|scaledenominator">Enter the scale denominator (real world units).</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">5</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">1</property>
+                  </packing>
+                </child>
+              </object>
+            </child>
+            <child type="label">
+              <object class="GtkLabel" id="label4">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes" context="pdfgeneralpage|label4">Measurement Tools</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>

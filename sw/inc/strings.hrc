@@ -1573,6 +1573,10 @@
 #define STR_QUERY_CLOSE_TEXT NC_("STR_QUERY_CLOSE_TEXT", "The current index entry was modified.")
 #define STR_QUERY_CLOSE_QUESTION NC_("STR_QUERY_CLOSE_QUESTION", "Do you want to save changes?")
 
+// Whisper speech recognition strings
+#define STR_WHISPER_API_KEY_CONFIGURED NC_("STR_WHISPER_API_KEY_CONFIGURED", "API Key Status: Configured")
+#define STR_WHISPER_API_KEY_NOT_CONFIGURED NC_("STR_WHISPER_API_KEY_NOT_CONFIGURED", "API Key Status: Not configured - Set LIBREOFFICE_OPENAI_API_KEY environment variable")
+
 #endif
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

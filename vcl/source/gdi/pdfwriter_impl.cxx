@@ -794,6 +794,27 @@ bool PDFPage::emit(sal_Int32 nParentObject )
             + OString::number( sal_Int32(m_pWriter->m_aStructParentTree.size()-1) )
             + "\n" );
     }
+    // Add measurement dictionary for Draw documents
+    if( m_pWriter->m_aContext.ExportMeasurementInfo )
+    {
+        // Create Measure dictionary according to PDF Reference 1.6, Section 8.7.2
+        aLine.append( "/Measure << /Type /Measure /Subtype /RL\n" );
+        
+        // Coordinate system (unit string)
+        aLine.append( "/R (" );
+        aLine.append( m_pWriter->m_aContext.DrawingUnit.toUtf8() );
+        aLine.append( ")\n" );
+        
+        // Scale ratio array
+        aLine.append( "/X [ " );
+        appendDouble( m_pWriter->m_aContext.ScaleNumerator / m_pWriter->m_aContext.ScaleDenominator, aLine );
+        aLine.append( " 0 0 " );
+        appendDouble( m_pWriter->m_aContext.ScaleNumerator / m_pWriter->m_aContext.ScaleDenominator, aLine );
+        aLine.append( " 0 0 ]\n" );
+        
+        aLine.append( ">>\n" );
+    }
+    
     if( m_eTransition != PDFWriter::PageTransition::Regular && m_nTransTime > 0 )
     {
         // transition duration

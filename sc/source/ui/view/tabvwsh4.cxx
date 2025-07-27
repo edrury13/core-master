@@ -89,6 +89,7 @@
 #include <LibreOfficeKit/LibreOfficeKitEnums.h>
 #include <comphelper/lok.hxx>
 #include <sfx2/sidebar/SidebarController.hxx>
+#include <sfx2/DocumentTimer.hxx>
 
 using namespace com::sun::star;
 using namespace sfx2::sidebar;
@@ -321,6 +322,7 @@ bool ScTabViewShell::PrepareClose(bool bUI)
         if (!bRet)
             return bRet;
     }
+    
     return SfxViewShell::PrepareClose(bUI);
 }
 
@@ -1516,6 +1518,8 @@ void ScTabViewShell::Construct( TriState nForceDesignMode )
     SetWindow( GetActiveWin() );
 
     pCurFrameLine.reset( new ::editeng::SvxBorderLine(&aColBlack, 20, SvxBorderLineStyle::SOLID) );
+    m_pDocumentTimer.reset(new sfx2::DocumentTimer(this));
+    
     StartListening(GetViewData().GetDocShell(), DuplicateHandling::Prevent);
     StartListening(GetViewFrame(), DuplicateHandling::Prevent);
     StartListening(*pSfxApp, DuplicateHandling::Prevent); // #i62045# #i62046# application is needed for Calc's own hints
@@ -1693,6 +1697,13 @@ void ScTabViewShell::Construct( TriState nForceDesignMode )
     SvBorder aBorder;
     GetBorderSize( aBorder, Size() );
     SetBorderPixel( aBorder );
+    
+    // Force initial timer display update
+    if (m_pDocumentTimer)
+    {
+        GetViewFrame().GetBindings().Invalidate(SID_DOC_TIMER);
+        GetViewFrame().GetBindings().Update(SID_DOC_TIMER);
+    }
 }
 
 class ScViewOptiChangesListener : public cppu::WeakImplHelper<util::XChangesListener>

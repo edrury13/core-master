@@ -42,6 +42,7 @@
 #include <com/sun/star/ui/dialogs/TemplateDescription.hpp>
 #include <com/sun/star/lang/XMultiServiceFactory.hpp>
 #include <rtl/ustring.hxx>
+#include <sal/log.hxx>
 
 #include <comphelper/processfactory.hxx>
 #include <comphelper/sequence.hxx>
@@ -64,6 +65,9 @@
 #include <comphelper/docpasswordhelper.hxx>
 #include <vcl/svapp.hxx>
 #include <vcl/weld.hxx>
+#include <com/sun/star/ui/dialogs/XFilePicker3.hpp>
+#include <com/sun/star/ui/dialogs/ExecutableDialogResults.hpp>
+#include <com/sun/star/lang/XMultiComponentFactory.hpp>
 
 #include <sfx2/app.hxx>
 #include <sfx2/bindings.hxx>
@@ -1158,6 +1162,90 @@ void SfxApplication::OpenRemoteExec_Impl( SfxRequest& rReq )
 {
     rReq.AppendItem( SfxBoolItem( SID_REMOTE_DIALOG, true ) );
     GetDispatcher_Impl()->Execute( SID_OPENDOC, SfxCallMode::SYNCHRON, *rReq.GetArgs() );
+}
+
+void SfxApplication::OpenFromGoogleDriveExec_Impl( SfxRequest& rReq )
+{
+    SAL_WARN("sfx.appl", "OpenFromGoogleDriveExec_Impl called");
+    fprintf(stderr, "\n\n*** GOOGLE DRIVE MENU CLICKED ***\n\n");
+    
+    FILE* menuLog = fopen("/tmp/gdrive_menu_clicked.log", "w");
+    if (menuLog) {
+        fprintf(menuLog, "Google Drive menu item clicked at %s\n", __TIME__);
+        fclose(menuLog);
+    }
+    
+    // Show Google Drive file picker dialog
+    try
+    {
+        uno::Reference<uno::XComponentContext> xContext = comphelper::getProcessComponentContext();
+        uno::Reference<lang::XMultiComponentFactory> xFactory = xContext->getServiceManager();
+        
+        // First ensure CUI library is loaded by creating the GetCreateDialogFactoryService
+        // This is necessary because GoogleDriveFilePicker is in the CUI module
+        try {
+            uno::Reference<uno::XInterface> xCuiLoader(
+                xFactory->createInstanceWithContext(
+                    u"com.sun.star.cui.GetCreateDialogFactoryService"_ustr,
+                    xContext));
+        } catch (...) {
+            // Ignore - this is just to ensure the library is loaded
+        }
+        
+        // Create the Google Drive picker service
+        SAL_WARN("sfx.appl", "Creating GoogleDriveFilePicker service...");
+        uno::Reference<ui::dialogs::XFilePicker3> xPicker(
+            xFactory->createInstanceWithArgumentsAndContext(
+                u"com.sun.star.ui.dialogs.GoogleDriveFilePicker"_ustr,
+                uno::Sequence<uno::Any>(),
+                xContext), 
+            uno::UNO_QUERY);
+        
+        if (xPicker.is())
+        {
+            SAL_WARN("sfx.appl", "GoogleDriveFilePicker service created successfully");
+            // Execute the picker
+            if (xPicker->execute() == ui::dialogs::ExecutableDialogResults::OK)
+            {
+                // Get selected file and open it
+                uno::Sequence<OUString> aFiles = xPicker->getSelectedFiles();
+                if (aFiles.hasElements())
+                {
+                    // Open the selected file
+                    SfxStringItem aFileItem(SID_FILE_NAME, aFiles[0]);
+                    SfxBoolItem aAsyncItem(SID_ASYNCHRON, false);
+                    rReq.SetArgs(SfxAllItemSet(SfxGetpApp()->GetPool()));
+                    rReq.AppendItem(aFileItem);
+                    rReq.AppendItem(aAsyncItem);
+                    GetDispatcher_Impl()->Execute(SID_OPENDOC, SfxCallMode::SYNCHRON, *rReq.GetArgs());
+                }
+            }
+        }
+        else
+        {
+            // Service not available - show error
+            SAL_WARN("sfx.appl", "GoogleDriveFilePicker service not found - com.sun.star.ui.dialogs.GoogleDriveFilePicker");
+            fprintf(stderr, "\n*** GoogleDriveFilePicker service NOT FOUND ***\n");
+            weld::Window* pParent = GetTopWindow();
+            std::unique_ptr<weld::MessageDialog> xErrorBox(
+                Application::CreateMessageDialog(pParent,
+                                               VclMessageType::Error, VclButtonsType::Ok,
+                                               u"Google Drive file picker service not available.\n"
+                                               "Please check your installation."_ustr));
+            xErrorBox->run();
+        }
+    }
+    catch (const uno::Exception& ex)
+    {
+        // Handle errors - show error dialog with detailed information
+        SAL_WARN("sfx.appl", "GoogleDriveFilePicker exception: " << ex.Message);
+        weld::Window* pParent = GetTopWindow();
+        std::unique_ptr<weld::MessageDialog> xErrorBox(
+            Application::CreateMessageDialog(pParent,
+                                           VclMessageType::Error, VclButtonsType::Ok,
+                                           OUString("Failed to open Google Drive picker: ") + ex.Message));
+        xErrorBox->run();
+    }
 }
 
 void SfxApplication::SignPDFExec_Impl(SfxRequest& rReq)

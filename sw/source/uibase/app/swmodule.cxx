@@ -82,6 +82,7 @@
 #include <svx/zoomsliderctrl.hxx>
 #include <zoomctrl.hxx>
 #include <wordcountctrl.hxx>
+#include <timerctrl.hxx>
 #include <AccessibilityStatusBarControl.hxx>
 #include <workctrl.hxx>
 #include <fldwrap.hxx>
@@ -137,6 +138,7 @@ SwModule::SwModule( SfxObjectFactory* pWebFact,
     m_pDragDrop( nullptr ),
     m_pXSelection( nullptr )
 {
+    SAL_WARN("sw.whisper", "SwModule constructor - initializing Writer module");
     SetName( u"StarWriter"_ustr );
     SvxErrorHandler::ensure();
     m_pErrorHandler.reset( new SfxErrorHandler( RID_SW_ERRHDL,
@@ -291,6 +293,7 @@ void SwDLL::RegisterControls()
     SvxSelectionModeControl::RegisterControl(FN_STAT_SELMODE, pMod );
     XmlSecStatusBarControl::RegisterControl( SID_SIGNATURE, pMod );
     SwWordCountStatusBarControl::RegisterControl(FN_STAT_WORDCOUNT, pMod);
+    SwTimerStatusBarControl::RegisterControl(FN_STAT_DOCTIMER, pMod);
     sw::AccessibilityStatusBarControl::RegisterControl(FN_STAT_ACCESSIBILITY_CHECK, pMod);
 
     SwBookmarkControl::RegisterControl(FN_STAT_PAGE, pMod );

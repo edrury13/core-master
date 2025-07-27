@@ -575,6 +575,81 @@ void SdtHelper::SetUncheckedState(const OUString& rUncheckedState)
 
 const OUString& SdtHelper::GetUncheckedState() const { return m_aUncheckedState; }
 
+void SdtHelper::createCheckboxControl()
+{
+    assert(getControlType() == SdtControlType::checkBox);
+    
+    if (!m_xFieldStartRange.is())
+        return;
+
+    uno::Reference<text::XTextCursor> xCrsr;
+    uno::Reference<text::XText> xText;
+    if (m_rDM_Impl.HasTopText())
+    {
+        uno::Reference<text::XTextAppend> xTextAppend = m_rDM_Impl.GetTopTextAppend();
+        if (xTextAppend.is())
+        {
+            xText = m_rDM_Impl.GetTopTextAppend()->getEnd()->getText();
+            xCrsr = xText->createTextCursorByRange(m_xFieldStartRange);
+        }
+    }
+    if (!xCrsr.is())
+        return;
+
+    try
+    {
+        xCrsr->gotoEnd(true);
+    }
+    catch (uno::Exception&)
+    {
+        TOOLS_WARN_EXCEPTION("writerfilter.dmapper",
+                             "Cannot get the right text range for checkbox control");
+        return;
+    }
+
+    // Set the checkbox text to the checked or unchecked state
+    OUString sCheckboxText = m_bChecked ? m_aCheckedState : m_aUncheckedState;
+    if (!sCheckboxText.isEmpty())
+        xCrsr->setString(sCheckboxText);
+
+    rtl::Reference<SwXContentControl> xContentControl(
+        m_rDM_Impl.GetTextDocument()->createContentControl());
+
+    // Set checkbox properties
+    xContentControl->setPropertyValue(u"Checkbox"_ustr, uno::Any(true));
+    xContentControl->setPropertyValue(u"Checked"_ustr, uno::Any(m_bChecked));
+    if (!m_aCheckedState.isEmpty())
+        xContentControl->setPropertyValue(u"CheckedState"_ustr, uno::Any(m_aCheckedState));
+    if (!m_aUncheckedState.isEmpty())
+        xContentControl->setPropertyValue(u"UncheckedState"_ustr, uno::Any(m_aUncheckedState));
+
+    // Apply general SDT properties
+    for (const beans::PropertyValue& prop : getInteropGrabBagAndClear())
+    {
+        OUString sPropertyName;
+        if (prop.Name == "ooxml:CT_SdtPr_alias")
+            sPropertyName = "Alias";
+        else if (prop.Name == "ooxml:CT_SdtPr_tag")
+            sPropertyName = "Tag";
+        else if (prop.Name == "ooxml:CT_SdtPr_id")
+            sPropertyName = "Id";
+        else if (prop.Name == "ooxml:CT_SdtPr_tabIndex")
+            sPropertyName = "TabIndex";
+        else if (prop.Name == "ooxml:CT_SdtPr_lock")
+            sPropertyName = "Lock";
+
+        if (!sPropertyName.isEmpty())
+        {
+            xContentControl->setPropertyValue(sPropertyName, prop.Value);
+        }
+    }
+
+    xText->insertTextContent(xCrsr, xContentControl, /*bAbsorb=*/true);
+
+    // clean up
+    clear();
+}
+
 void SdtHelper::clear()
 {
     m_aDropDownItems.clear();

@@ -26,6 +26,7 @@
 #include <svx/svdograf.hxx>
 #include <sfx2/zoomitem.hxx>
 #include <sfx2/lokhelper.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <svx/svdpagv.hxx>
 #include <svl/ptitem.hxx>
 #include <svl/stritem.hxx>
@@ -747,6 +748,24 @@ void DrawViewShell::GetStatusBarState(SfxItemSet& rSet)
 
         rSet.Put (SfxStringItem (SID_STATUS_PAGE, aOUString));
     }
+    
+    if( SfxItemState::DEFAULT == rSet.GetItemState( SID_DOC_TIMER ) )
+    {
+        OUString aTimerString;
+        if (GetDocumentTimer())
+        {
+            aTimerString = "Timer: " + GetDocumentTimer()->GetTimeString();
+            if (GetDocumentTimer()->IsActive())
+                aTimerString += " [Running]";
+            else
+                aTimerString += " [Stopped]";
+        }
+        else
+        {
+            aTimerString = "Timer: 00:00:00 [Stopped]";
+        }
+        rSet.Put( SfxStringItem( SID_DOC_TIMER, aTimerString ) );
+    }
     // Layout
     if( SfxItemState::DEFAULT == rSet.GetItemState( SID_STATUS_LAYOUT ) )
     {
@@ -755,6 +774,24 @@ void DrawViewShell::GetStatusBarState(SfxItemSet& rSet)
         if (nPos != -1)
             aString = aString.copy(0, nPos);
         rSet.Put( SfxStringItem( SID_STATUS_LAYOUT, aString ) );
+    }
+    // Timer
+    if( SfxItemState::DEFAULT == rSet.GetItemState( SID_DOC_TIMER ) )
+    {
+        OUString aTimerString;
+        if (GetDocumentTimer())
+        {
+            aTimerString = "Timer: " + GetDocumentTimer()->GetTimeString();
+            if (GetDocumentTimer()->IsActive())
+                aTimerString += " [Running]";
+            else
+                aTimerString += " [Stopped]";
+        }
+        else
+        {
+            aTimerString = "Timer: 00:00:00 [Stopped]";
+        }
+        rSet.Put( SfxStringItem( SID_DOC_TIMER, aTimerString ) );
     }
     // Scale
     if( SfxItemState::DEFAULT == rSet.GetItemState( SID_SCALE ) )

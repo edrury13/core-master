@@ -1,0 +1,53 @@
+# Dockerfile.vnc - Add VNC support to existing LibreOffice builder image
+FROM libreoffice-builder-fixed:latest
+
+USER root
+
+# Install VNC server and desktop environment
+RUN apt-get update && apt-get install -y \
+    tigervnc-standalone-server \
+    tigervnc-viewer \
+    xfce4 \
+    xfce4-goodies \
+    xfce4-terminal \
+    novnc \
+    websockify \
+    supervisor \
+    dbus-x11 \
+    x11-apps \
+    firefox \
+    nano \
+    vim \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
+
+# Switch back to builder user
+USER builder
+WORKDIR /home/builder
+
+# Configure VNC
+RUN mkdir -p /home/builder/.vnc && \
+    echo "libreoffice" | vncpasswd -f > /home/builder/.vnc/passwd && \
+    chmod 600 /home/builder/.vnc/passwd && \
+    echo '#!/bin/bash\nexport DISPLAY=:1\nxfce4-session &' > /home/builder/.vnc/xstartup && \
+    chmod +x /home/builder/.vnc/xstartup
+
+# Set up desktop shortcuts
+RUN mkdir -p /home/builder/Desktop && \
+    echo '[Desktop Entry]\nType=Application\nName=Build LibreOffice\nComment=Configure and build LibreOffice from source\nExec=/home/builder/build-libreoffice.sh\nIcon=applications-development\nTerminal=true\nCategories=Development;' > /home/builder/Desktop/Build-LibreOffice.desktop && \
+    echo '[Desktop Entry]\nType=Application\nName=LibreOffice Writer\nComment=Run LibreOffice Writer\nExec=/home/builder/run-libreoffice.sh writer\nIcon=libreoffice-writer\nTerminal=false\nCategories=Office;' > /home/builder/Desktop/LibreOffice-Writer.desktop && \
+    echo '[Desktop Entry]\nType=Application\nName=LibreOffice Calc\nComment=Run LibreOffice Calc\nExec=/home/builder/run-libreoffice.sh calc\nIcon=libreoffice-calc\nTerminal=false\nCategories=Office;' > /home/builder/Desktop/LibreOffice-Calc.desktop && \
+    chmod +x /home/builder/Desktop/*.desktop
+
+# Environment variables
+ENV DISPLAY=:1
+ENV VNC_RESOLUTION=1920x1080
+ENV VNC_PASSWORD=libreoffice
+
+WORKDIR /core
+
+# Expose VNC ports
+EXPOSE 5901 6080
+
+# Start VNC server
+CMD ["/home/builder/start-vnc-simple.sh"]

@@ -1,0 +1,24 @@
+You are Instance 2 working on DOCX improvements for LibreOffice Writer.
+
+IMPORTANT: Write status updates to .claude/orchestrator/status/instance2_status.txt as you work.
+
+Your tasks:
+1. Analyze sw/source/writerfilter/dmapper/ for limitations
+2. Fix style handling in StyleSheetTable.cxx
+3. Improve table borders in TablePropertiesHandler.cxx
+4. Add content control support
+
+Focus areas:
+- Better style inheritance
+- Theme color preservation  
+- Table border rendering
+- Cell shading improvements
+- Content controls (dropdowns, date pickers)
+
+Start by:
+- Examining current implementation
+- Creating test DOCX files that show issues
+- Implementing fixes in dmapper
+- Adding unit tests
+
+Update your status file frequently. When done, create .claude/orchestrator/status/instance2_complete.txt

@@ -5364,6 +5364,24 @@ SfxStringItem StatusDocPos SID_STATUS_DOCPOS
     GroupId = SfxGroupId::View;
 ]
 
+SfxStringItem StateDocTimer SID_DOC_TIMER
+
+[
+    AutoUpdate = FALSE,
+    FastCall = FALSE,
+    ReadOnlyDoc = TRUE,
+    Toggle = FALSE,
+    Container = FALSE,
+    RecordAbsolute = FALSE,
+    RecordPerSet;
+
+
+    AccelConfig = FALSE,
+    MenuConfig = FALSE,
+    ToolBoxConfig = FALSE,
+    GroupId = SfxGroupId::View;
+]
+
 SfxStringItem RowColSelCount SID_ROWCOL_SELCOUNT
 
 [

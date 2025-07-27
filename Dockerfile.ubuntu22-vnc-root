@@ -1,0 +1,50 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV USER=root
+ENV PASSWORD=password
+
+# Install VNC, desktop environment and sudo
+RUN apt-get update && apt-get install -y \
+    xfce4 xfce4-terminal \
+    tightvncserver novnc websockify \
+    sudo nano vim wget curl \
+    && apt-get clean
+
+# Install LibreOffice runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libx11-6 libxrender1 libxext6 libxtst6 libxi6 \
+    libxinerama1 libxrandr2 libxcursor1 libcairo2 \
+    libcups2 libdbus-1-3 libfontconfig1 libfreetype6 \
+    libgcc-s1 libgl1 libglu1-mesa libsm6 libice6 \
+    libxcomposite1 libxdamage1 libxfixes3 libatk1.0-0 \
+    libgtk-3-0 libglib2.0-0 libharfbuzz0b libpango-1.0-0 \
+    libpangocairo-1.0-0 libpangoft2-1.0-0 libnss3 libnspr4 \
+    libstdc++6 \
+    && apt-get clean
+
+# Setup VNC for root user
+RUN mkdir -p /root/.vnc \
+    && echo "$PASSWORD" | vncpasswd -f > /root/.vnc/passwd \
+    && chmod 600 /root/.vnc/passwd \
+    && echo '#!/bin/bash\nxrdb $HOME/.Xresources\nstartxfce4 &' > /root/.vnc/xstartup \
+    && chmod +x /root/.vnc/xstartup
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+echo "Starting VNC server..."\n\
+vncserver :1 -geometry 1920x1080 -depth 24\n\
+echo "Starting noVNC web interface..."\n\
+websockify -D --web=/usr/share/novnc/ 6080 localhost:5901\n\
+echo "VNC server running on :5901"\n\
+echo "Web interface available at http://localhost:6080"\n\
+echo "Password: password"\n\
+tail -f /dev/null' > /start.sh && chmod +x /start.sh
+
+EXPOSE 5901 6080
+
+# Run as root
+USER root
+WORKDIR /root
+
+CMD ["/start.sh"]

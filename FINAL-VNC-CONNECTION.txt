@@ -1,0 +1,17 @@
+SIMPLE VNC CONNECTION INSTRUCTIONS
+
+In TightVNC Viewer, connect to:
+172.28.160.1::5900
+
+Password: libreoffice
+
+That's it!
+
+After connecting:
+1. Right-click on the gray desktop
+2. Select "Terminal emulator" 
+3. Run these commands:
+   cd /build/instdir/program
+   ./soffice --writer
+
+Your LibreOffice will open!

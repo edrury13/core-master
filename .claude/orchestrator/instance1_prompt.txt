@@ -1,0 +1,22 @@
+You are Instance 1 working on LibreOffice Google Docs integration.
+
+IMPORTANT: You are working on a real implementation task. Please actually create the files and implement the code.
+
+Your specific tasks:
+1. Create the directory structure at ucb/source/ucp/gdocs/
+2. Implement these files based on the CMIS provider template:
+   - gdocs_provider.hxx and .cxx - Main provider class
+   - gdocs_content.hxx and .cxx - Content handling for files/folders
+   - gdocs_datasupplier.hxx and .cxx - Data supplier for listings
+   - gdocs_auth.hxx and .cxx - OAuth2 authentication
+   - ucpgdocs1.component - Component registration
+
+3. Key implementation points:
+   - Base the structure on ucb/source/ucp/cmis/
+   - Implement OAuth2 flow for Google authentication
+   - Add Google Drive API endpoint definitions
+   - Create unit test structure in ucb/qa/cppunit/gdocs/
+
+4. After implementation, create a status report at .claude/orchestrator/status/instance1_complete.md
+
+Start implementing now. Focus on creating working code that compiles with LibreOffice.

@@ -1,0 +1,48 @@
+Instance 3: PPTX Handling Improvements
+======================================
+
+Status: COMPLETED
+Started: 2025-07-22
+Completed: 2025-07-22
+
+Tasks:
+1. SmartArt Support in oox/source/drawingml/diagram/
+   - [x] Create diagramlayoutconverter.cxx
+   - [x] Support process and hierarchy diagrams
+   
+2. Enhance animations in oox/source/ppt/animationspersist.cxx
+   - [x] Add motion path support
+   - [x] Fix animation timing issues
+   
+3. Fix shapes in oox/source/drawingml/customshapeproperties.cxx
+   - [x] Improve gradient fill handling
+   - [x] Fix text box positioning
+
+Progress Log:
+- Initialized status tracking
+- Analyzing existing codebase structure
+- Created diagramlayoutconverter.cxx with support for:
+  * Process diagrams (linear flow with arrows)
+  * Hierarchy diagrams (tree structure)
+  * Cycle diagrams (circular arrangement)
+  * Relationship diagrams
+  * Default grid layout for unknown types
+- Created diagramlayoutconverter.hxx header file
+- Enhanced animationspersist.cxx with:
+  * MotionPathProperties struct for motion path support
+  * Motion path conversion from PowerPoint to SVG format
+  * AnimationTiming utilities for fixing timing issues
+  * Automatic duration calculation for container nodes
+  * Fix for fill behavior and restart issues
+- Updated animationspersist.hxx with new declarations
+- Enhanced customshapeproperties.cxx with:
+  * applyGradientFillProperties() method to fix gradient angles
+  * Gradient angle conversion from PowerPoint to LibreOffice coordinate system
+  * Improved gradient step count for smoother rendering
+  * Support for transparency gradients
+  * adjustTextFrameInsets() method to fix text box positioning
+  * PowerPoint-style text margin defaults (7.2pt left/right, 3.6pt top/bottom)
+  * Shape-specific text frame adjustments
+- Updated customshapeproperties.hxx with new method declarations
+
+All tasks completed successfully!

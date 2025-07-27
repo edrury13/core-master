@@ -54,6 +54,7 @@
 #include <SdShapeTypes.hxx>
 #include <TextObjectBar.hxx>
 #include <tmplctrl.hxx>
+#include <timerctrl.hxx>
 #include <scalectrl.hxx>
 
 #include <svx/svxids.hrc>
@@ -214,6 +215,7 @@ void SdDLL::RegisterControllers(SdModule* pMod)
     XmlSecStatusBarControl::RegisterControl( SID_SIGNATURE, pMod );
     SdTemplateControl::RegisterControl( SID_STATUS_LAYOUT, pMod );
     SdScaleControl::RegisterControl( SID_SCALE, pMod );
+    sd::SdTimerStatusBarControl::RegisterControl( SID_DOC_TIMER, pMod );
     SvxTbxCtlDraw::RegisterControl(SID_INSERT_DRAW, pMod );
 }
 

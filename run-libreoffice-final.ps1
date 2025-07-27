@@ -1,0 +1,1 @@
+docker run --rm -v core-master_libreoffice-build:/lo -e DISPLAY=host.docker.internal:0.0 libreoffice-runner

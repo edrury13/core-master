@@ -39,6 +39,8 @@ class SdrOle2Obj;       // for the ones, who have undefined parts of SVDRAW
 class SdDrawDocument;
 class SvxNumBulletItem;
 
+namespace sfx2 { class DocumentTimer; }
+
 namespace weld
 {
     class Window;
@@ -147,6 +149,9 @@ public:
     SD_DLLPUBLIC DrawDocShell* GetDocSh() const;
 
     SdDrawDocument*  GetDoc() const;
+    
+    sfx2::DocumentTimer* GetDocumentTimer() { return m_pDocumentTimer.get(); }
+    const sfx2::DocumentTimer* GetDocumentTimer() const { return m_pDocumentTimer.get(); }
 
     SAL_RET_MAYBENULL SD_DLLPUBLIC SfxViewFrame* GetViewFrame() const;
 
@@ -555,6 +560,8 @@ private:
         shapes.
     */
     ::std::unique_ptr< ::sd::WindowUpdater> mpWindowUpdater;
+    
+    ::std::unique_ptr<sfx2::DocumentTimer> m_pDocumentTimer;
 
     /** Create the rulers.
     */

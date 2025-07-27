@@ -28,11 +28,22 @@
 #include <com/sun/star/presentation/ShapeAnimationSubType.hpp>
 #include <com/sun/star/animations/Event.hpp>
 #include <com/sun/star/animations/XAnimationNode.hpp>
+#include <com/sun/star/animations/XAnimateMotion.hpp>
+#include <com/sun/star/animations/AnimationFill.hpp>
+#include <com/sun/star/animations/AnimationRestart.hpp>
+#include <com/sun/star/animations/Timing.hpp>
+#include <com/sun/star/drawing/PointSequence.hpp>
+#include <com/sun/star/animations/AnimationNodeType.hpp>
+#include <com/sun/star/animations/AnimationTransformType.hpp>
+#include <com/sun/star/container/XEnumerationAccess.hpp>
+#include <com/sun/star/container/XEnumeration.hpp>
 
 #include <oox/drawingml/shape.hxx>
 #include <oox/helper/addtosequence.hxx>
 #include <oox/token/namespaces.hxx>
 #include <oox/token/tokens.hxx>
+#include <basegfx/polygon/b2dpolypolygon.hxx>
+#include <basegfx/polygon/b2dpolypolygontools.hxx>
 
 using namespace ::com::sun::star::uno;
 using namespace ::com::sun::star::presentation;
@@ -213,6 +224,229 @@ namespace oox::ppt {
             aAny = addToSequence( aAny, elem.convert(pSlide) );
         }
         return aAny;
+    }
+
+    void MotionPathProperties::convertToSvgPath(OUString& rSvgPath) const
+    {
+        if (maPath.isEmpty())
+            return;
+
+        // Convert PowerPoint motion path to SVG path
+        // PowerPoint uses a coordinate system where paths are relative to shape position
+        OUStringBuffer aSvgPath;
+        sal_Int32 nIndex = 0;
+        
+        while (nIndex < maPath.getLength())
+        {
+            sal_Unicode cCommand = maPath[nIndex];
+            nIndex++;
+            
+            switch (cCommand)
+            {
+                case 'M': // Move to
+                case 'L': // Line to
+                case 'C': // Cubic bezier
+                case 'Z': // Close path
+                    aSvgPath.append(cCommand);
+                    break;
+                case 'E': // End (PowerPoint specific)
+                    // Convert to SVG close path
+                    aSvgPath.append('Z');
+                    break;
+                default:
+                    // Copy coordinates
+                    while (nIndex < maPath.getLength() && 
+                           (maPath[nIndex] == ' ' || maPath[nIndex] == ',' ||
+                            (maPath[nIndex] >= '0' && maPath[nIndex] <= '9') ||
+                            maPath[nIndex] == '.' || maPath[nIndex] == '-'))
+                    {
+                        aSvgPath.append(maPath[nIndex]);
+                        nIndex++;
+                    }
+                    break;
+            }
+        }
+        
+        rSvgPath = aSvgPath.makeStringAndClear();
+    }
+
+    void MotionPathProperties::applyToAnimationNode(
+        const Reference<XAnimationNode>& xNode) const
+    {
+        Reference<XAnimateMotion> xAnimateMotion(xNode, UNO_QUERY);
+        if (!xAnimateMotion.is())
+            return;
+
+        // Convert and set the motion path
+        OUString sSvgPath;
+        convertToSvgPath(sSvgPath);
+        if (!sSvgPath.isEmpty())
+        {
+            xAnimateMotion->setPath(Any(sSvgPath));
+        }
+
+        // Set origin if specified
+        if (mnOrigin != 0)
+        {
+            xAnimateMotion->setOrigin(Any(mnOrigin));
+        }
+    }
+
+    double AnimationTiming::convertDuration(const OUString& rDuration)
+    {
+        // Convert PowerPoint duration format to seconds
+        // Format can be: "1000" (milliseconds), "1s", "1.5s", "indefinite"
+        
+        if (rDuration == "indefinite")
+            return -1.0; // Indefinite duration
+        
+        double fDuration = 0.0;
+        OUString sDuration = rDuration.trim();
+        
+        if (sDuration.endsWith("s"))
+        {
+            // Duration in seconds
+            sDuration = sDuration.copy(0, sDuration.getLength() - 1);
+            fDuration = sDuration.toDouble();
+        }
+        else if (sDuration.endsWith("ms"))
+        {
+            // Duration in milliseconds
+            sDuration = sDuration.copy(0, sDuration.getLength() - 2);
+            fDuration = sDuration.toDouble() / 1000.0;
+        }
+        else
+        {
+            // Assume milliseconds if no unit
+            fDuration = sDuration.toDouble() / 1000.0;
+        }
+        
+        return fDuration;
+    }
+
+    void AnimationTiming::fixNodeTiming(const Reference<XAnimationNode>& xNode)
+    {
+        if (!xNode.is())
+            return;
+
+        // Fix common timing issues
+        
+        // 1. Ensure fill behavior is set correctly
+        if (!xNode->getFill())
+        {
+            sal_Int16 nNodeType = xNode->getType();
+            if (nNodeType == AnimationNodeType::ANIMATE ||
+                nNodeType == AnimationNodeType::ANIMATEMOTION ||
+                nNodeType == AnimationNodeType::ANIMATETRANSFORM ||
+                nNodeType == AnimationNodeType::ANIMATECOLOR ||
+                nNodeType == AnimationNodeType::SET)
+            {
+                // Default to "hold" for animation nodes
+                xNode->setFill(AnimationFill::HOLD);
+            }
+        }
+
+        // 2. Fix restart behavior
+        if (xNode->getRestart() == AnimationRestart::DEFAULT)
+        {
+            // Set to "never" to prevent unexpected restarts
+            xNode->setRestart(AnimationRestart::NEVER);
+        }
+
+        // 3. Ensure begin time is properly set
+        Any aBegin = xNode->getBegin();
+        if (!aBegin.hasValue())
+        {
+            // Set to 0 for immediate start
+            xNode->setBegin(Any(0.0));
+        }
+
+        // 4. Fix duration for container nodes
+        sal_Int16 nNodeType = xNode->getType();
+        if (nNodeType == AnimationNodeType::PAR ||
+            nNodeType == AnimationNodeType::SEQ)
+        {
+            Any aDuration = xNode->getDuration();
+            if (!aDuration.hasValue())
+            {
+                // Calculate duration from children
+                double fMaxEndTime = 0.0;
+                Reference<XEnumerationAccess> xEnumAccess(xNode, UNO_QUERY);
+                if (xEnumAccess.is())
+                {
+                    Reference<XEnumeration> xEnum = xEnumAccess->createEnumeration();
+                    while (xEnum->hasMoreElements())
+                    {
+                        Reference<XAnimationNode> xChild;
+                        xEnum->nextElement() >>= xChild;
+                        if (xChild.is())
+                        {
+                            double fChildEnd = calculateNodeEndTime(xChild);
+                            fMaxEndTime = std::max(fMaxEndTime, fChildEnd);
+                        }
+                    }
+                }
+                
+                if (fMaxEndTime > 0.0)
+                {
+                    xNode->setDuration(Any(fMaxEndTime));
+                }
+            }
+        }
+    }
+
+    double AnimationTiming::calculateNodeEndTime(const Reference<XAnimationNode>& xNode)
+    {
+        if (!xNode.is())
+            return 0.0;
+
+        double fBegin = 0.0;
+        double fDuration = 0.0;
+        
+        // Get begin time
+        Any aBegin = xNode->getBegin();
+        if (aBegin.hasValue())
+        {
+            if (aBegin >>= fBegin)
+            {
+                // Already a double
+            }
+            else
+            {
+                Event aEvent;
+                if (aBegin >>= aEvent)
+                {
+                    // Event-based, assume 0 for calculation
+                    fBegin = 0.0;
+                }
+            }
+        }
+        
+        // Get duration
+        Any aDuration = xNode->getDuration();
+        if (aDuration.hasValue())
+        {
+            if (aDuration >>= fDuration)
+            {
+                // Already a double
+            }
+            else
+            {
+                OUString sDuration;
+                if (aDuration >>= sDuration)
+                {
+                    fDuration = convertDuration(sDuration);
+                }
+            }
+        }
+        
+        // For indefinite or invalid duration, use a default
+        if (fDuration < 0.0 || fDuration > 3600.0) // Max 1 hour
+        {
+            fDuration = 1.0; // Default 1 second
+        }
+        
+        return fBegin + fDuration;
     }
 
 }

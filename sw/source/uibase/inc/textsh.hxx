@@ -75,6 +75,8 @@ public:
     void    ExecDB(SfxRequest const &);
     void    ExecTransliteration(SfxRequest &);
     void    ExecRotateTransliteration(SfxRequest &);
+    void    ExecWhisper(SfxRequest &);
+    void    GetWhisperState(SfxItemSet &);
 
     void    GetAttrState(SfxItemSet &);
 

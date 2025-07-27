@@ -72,6 +72,7 @@ StyleSheetEntry::StyleSheetEntry() :
         ,m_nStyleTypeCode(StyleType::Unknown)
         ,m_pProperties(new StyleSheetPropertyMap)
         ,m_bAutoRedefine(false)
+        ,m_bHasInheritance(false)
 {
 }
 
@@ -523,6 +524,8 @@ void StyleSheetTable::lcl_sprm(Sprm & rSprm)
                 aValue.Value <<= sStringValue;
                 pTableEntry->AppendInteropGrabBag(aValue);
             }
+            // Mark that this style has inheritance so we can handle theme colors properly
+            m_pCurrentEntry->m_bHasInheritance = true;
             break;
         case NS_ooxml::LN_CT_Style_link:
             m_pCurrentEntry->m_sLinkStyleIdentifier = sStringValue;

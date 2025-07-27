@@ -99,6 +99,7 @@
 #include <sfx2/signaturestate.hxx>
 #include <sfx2/app.hxx>
 #include <sfx2/objsh.hxx>
+#include <sfx2/gdrivesync.hxx>
 #include <sfx2/sfxresid.hxx>
 #include <sfx2/docfile.hxx>
 #include <sfx2/fcontnr.hxx>
@@ -2515,6 +2516,31 @@ bool SfxObjectShell::DoSaveCompleted( SfxMedium* pNewMed, bool bRegisterRecent )
 
     if (bRegisterRecent)
         AddToRecentlyUsedList();
+
+    // Check if this is a Google Drive file that needs uploading
+    if (bOk && pMedium)
+    {
+        OUString sURL = pMedium->GetURLObject().GetMainURL(INetURLObject::DecodeMechanism::NONE);
+        sfx2::GoogleDriveSync& rSync = sfx2::GoogleDriveSync::getInstance();
+        
+        if (rSync.isGoogleDriveFile(sURL))
+        {
+            SAL_INFO("sfx.doc", "Detected Google Drive file save, marking for upload: " << sURL);
+            rSync.markForUpload(sURL);
+            
+            // Upload the file immediately
+            auto fileInfo = rSync.getFileInfo(sURL);
+            if (fileInfo && fileInfo->needsUpload)
+            {
+                // Call static upload method from GoogleDriveFilePicker
+                SAL_INFO("sfx.doc", "Uploading Google Drive file: " << fileInfo->fileId);
+                
+                // Need to include the header for GoogleDriveFilePicker
+                // For now, we'll use the upload method from GoogleDriveSync
+                rSync.uploadFile(sURL);
+            }
+        }
+    }
 
     return bOk;
 }

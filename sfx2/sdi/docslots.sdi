@@ -30,6 +30,10 @@ interface Documents
     [
         ExecMethod = OpenRemoteExec_Impl ;
     ]
+    SID_OPENFROMGOOGLEDRIVE
+    [
+        ExecMethod = OpenFromGoogleDriveExec_Impl ;
+    ]
     SID_SIGNPDF
     [
         ExecMethod = SignPDFExec_Impl ;

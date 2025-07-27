@@ -32,6 +32,7 @@
 #include <sfx2/dispatch.hxx>
 #include <sfx2/newstyle.hxx>
 #include <sfx2/tplpitem.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <svl/ilstitem.hxx>
 #include <svl/numformat.hxx>
 #include <svl/zformat.hxx>
@@ -531,9 +532,11 @@ void ScTabViewShell::GetState( SfxItemSet& rSet )
                 break;
 
             case FID_TOGGLEHIDDENCOLROW:
+            {
                 const svtools::ColorConfig& rColorCfg = ScModule::get()->GetColorConfig();
                 rSet.Put( SfxBoolItem( nWhich, rColorCfg.GetColorValue(svtools::CALCHIDDENROWCOL).bIsVisible) );
-                break;
+            }
+            break;
 
         } // switch ( nWitch )
         nWhich = aIter.NextWhich();

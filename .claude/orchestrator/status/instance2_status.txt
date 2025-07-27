@@ -1,0 +1,37 @@
+Instance 2: DOCX Handling Improvements - In Progress
+
+Current Tasks:
+1. Fix style inheritance in StyleSheetTable.cxx ✓ (Complete)
+2. Improve table borders in TablePropertiesHandler.cxx ✓ (Partially Complete)
+3. Add content controls in SdtHelper.cxx ✓ (Partially Complete)
+
+Progress:
+- Enhanced StyleSheetTable to track style inheritance with m_bHasInheritance flag
+- Modified basedOn handling to mark styles with inheritance
+- Double/triple borders already supported (codes 3 and 10 in ConversionHelper)
+- Cell gradient shading requires adding gradient support to drawing::FillStyle
+- Checkbox control implementation added
+
+Completed:
+1. StyleSheetTable.cxx improvements:
+   - Added m_bHasInheritance member to StyleSheetEntry class
+   - Updated constructor to initialize the new member
+   - Modified basedOn case to set inheritance flag for better theme color support
+
+2. TablePropertiesHandler.cxx analysis:
+   - Confirmed double/triple borders already supported
+   - CellColorHandler handles solid colors and patterns
+   - Gradient support would require FillStyle_GRADIENT implementation
+
+3. SdtHelper.cxx improvements:
+   - Added createCheckboxControl() method
+   - Implemented checkbox content control creation
+   - Supports checked/unchecked states and custom text
+   - Integrates with existing SDT property handling
+
+Summary:
+- Style inheritance tracking improved for theme colors
+- Table borders already support double/triple styles
+- Checkbox content controls now implemented
+- Dropdown and date picker controls already exist
+- Gradient shading would require deeper changes to FillStyle enum

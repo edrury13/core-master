@@ -1958,5 +1958,26 @@ interface BaseText
         StateMethod = GetState ;
     ]
 
+    // Whisper commands
+    FN_INSERT_WHISPER_TEXT
+    [
+        ExecMethod = ExecWhisper ;
+        StateMethod = GetWhisperState ;
+        DisableFlags="SfxDisableFlags::SwOnProtectedCursor";
+    ]
+
+    FN_WHISPER_START_STOP
+    [
+        ExecMethod = ExecWhisper ;
+        StateMethod = GetWhisperState ;
+        DisableFlags="SfxDisableFlags::SwOnProtectedCursor";
+    ]
+
+    FN_WHISPER_SETTINGS
+    [
+        ExecMethod = ExecWhisper ;
+        StateMethod = GetWhisperState ;
+    ]
+
 }  // end of interface text
 

@@ -32,6 +32,7 @@
  <toolbar:toolbaritem xlink:href=".uno:EditGlossary"/>
  <toolbar:toolbaritem xlink:href=".uno:InsertSymbol"/>
  <toolbar:toolbaritem xlink:href=".uno:InsertFieldCtrl"/>
+ <toolbar:toolbaritem xlink:href=".uno:InsertWhisperText"/>
  <toolbar:toolbaritem xlink:href=".uno:Config" toolbar:visible="false"/>
  <toolbar:toolbarseparator/>
  <toolbar:toolbaritem xlink:href=".uno:InsertGraphic"/>

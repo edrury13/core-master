@@ -550,6 +550,10 @@ class XFillGradientItem;
 // CAUTION! Range <457 .. 457> used by EditEngine (!)
 
 #define SID_INSERT_HYPERLINK                            ( SID_SVX_START + 458 )
+
+// Note: Form control IDs already exist at lines 299-343
+// SID_INSERT_PUSHBUTTON, SID_INSERT_CHECKBOX, etc. are already defined
+// SID_INSERT_EDIT is used for text fields
 #define SID_REMOVE_HYPERLINK                            ( SID_SVX_START + 459 )
 #define SID_ATTR_ALIGN_INDENT                           ( SID_SVX_START + 460 )
 #define SID_DEC_INDENT                                  ( SID_SVX_START + 461 )

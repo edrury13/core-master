@@ -200,6 +200,9 @@ public:
     void createDateContentControl();
 
     void createPlainTextControl();
+    
+    /// Create checkbox control from w:sdt's w:checkbox.
+    void createCheckboxControl();
 
     void appendToInteropGrabBag(const css::beans::PropertyValue& rValue);
     css::uno::Sequence<css::beans::PropertyValue> getInteropGrabBagAndClear();

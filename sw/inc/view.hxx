@@ -73,7 +73,7 @@ class SwNode;
 class SwMarkName;
 
 namespace com::sun::star::view { class XSelectionSupplier; }
-namespace sfx2 { class FileDialogHelper; }
+namespace sfx2 { class FileDialogHelper; class DocumentTimer; }
 namespace weld { class Scrollbar; }
 
 const tools::Long nLeftOfst = -370;
@@ -219,6 +219,8 @@ class SW_DLLPUBLIC SwView: public SfxViewShell
     std::unique_ptr<SwFormatClipboard> m_pFormatClipboard; //holds data for format paintbrush
 
     std::unique_ptr<SwPostItMgr> m_pPostItMgr;
+    
+    std::unique_ptr<sfx2::DocumentTimer> m_pDocumentTimer;
 
     SelectionType       m_nSelectionType;
     sal_uInt16          m_nPageCnt;
@@ -667,6 +669,9 @@ public:
 
     SwPostItMgr* GetPostItMgr() { return m_pPostItMgr.get();}
     const SwPostItMgr* GetPostItMgr() const { return m_pPostItMgr.get();}
+    
+    sfx2::DocumentTimer* GetDocumentTimer() { return m_pDocumentTimer.get(); }
+    const sfx2::DocumentTimer* GetDocumentTimer() const { return m_pDocumentTimer.get(); }
 
     // exhibition hack (MA,MBA)
     void SelectShellForDrop();

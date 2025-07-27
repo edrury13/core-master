@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<oor:component-data xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" oor:name="Types" oor:package="org.openoffice.TypeDetection">
+  <node oor:name="Types">
+    <node oor:name="Google_Docs_Document" oor:op="replace">
+      <prop oor:name="DetectService">
+        <value>com.sun.star.comp.gdocs.DocsImportFilter</value>
+      </prop>
+      <prop oor:name="URLPattern">
+        <value>https://docs.google.com/document/*</value>
+      </prop>
+      <prop oor:name="Extensions">
+        <value></value>
+      </prop>
+      <prop oor:name="MediaType">
+        <value>application/vnd.google-apps.document</value>
+      </prop>
+      <prop oor:name="Preferred">
+        <value>false</value>
+      </prop>
+      <prop oor:name="PreferredFilter">
+        <value>Google_Docs_Document</value>
+      </prop>
+      <prop oor:name="UIName">
+        <value xml:lang="en-US">Google Docs Document</value>
+      </prop>
+      <prop oor:name="ClipboardFormat">
+        <value></value>
+      </prop>
+    </node>
+  </node>
+</oor:component-data>

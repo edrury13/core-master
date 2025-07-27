@@ -24,6 +24,8 @@
 
 #include <utility>
 
+#include <sfx2/DocumentTimer.hxx>
+
 #include <com/sun/star/lang/XMultiServiceFactory.hpp>
 #include <com/sun/star/linguistic2/XThesaurus.hpp>
 #include <svx/pageitem.hxx>
@@ -1934,6 +1936,24 @@ void DrawViewShell::GetState (SfxItemSet& rSet)
                 // document shell.
                 GetDocSh()->GetState (rSet);
                 break;
+            case SID_DOC_TIMER:
+            {
+                OUString aTimerString;
+                if (GetDocumentTimer())
+                {
+                    aTimerString = "Timer: " + GetDocumentTimer()->GetTimeString();
+                    if (GetDocumentTimer()->IsActive())
+                        aTimerString += " [Running]";
+                    else
+                        aTimerString += " [Stopped]";
+                }
+                else
+                {
+                    aTimerString = "Timer: 00:00:00";
+                }
+                rSet.Put(SfxStringItem(SID_DOC_TIMER, aTimerString));
+            }
+            break;
             default:
                 SAL_WARN("sd", "DrawViewShell::GetState(): can not handle which id " << nWhich);
                 break;
@@ -1977,6 +1997,34 @@ void DrawViewShell::Execute (SfxRequest& rReq)
 
             pViewFrame->GetBindings().Invalidate(SID_SPELL_DIALOG);
             rReq.Ignore ();
+        }
+        break;
+
+        case SID_DOC_TIMER:
+            if (GetDocumentTimer())
+            {
+                if (GetDocumentTimer()->IsActive())
+                    GetDocumentTimer()->Stop();
+                else
+                    GetDocumentTimer()->Start();
+                
+                // Update status bar immediately
+                SfxBindings& rBindings = GetViewFrame()->GetBindings();
+                rBindings.Invalidate(SID_DOC_TIMER);
+            }
+            rReq.Done();
+            break;
+
+        // Form Control handlers
+        case SID_INSERT_PUSHBUTTON:
+        case SID_INSERT_CHECKBOX:
+        case SID_INSERT_RADIOBUTTON:
+        case SID_INSERT_EDIT:  // Text field
+        case SID_INSERT_LISTBOX:
+        case SID_INSERT_COMBOBOX:
+        {
+            InsertFormControl(rReq);
+            rReq.Done();
         }
         break;
 

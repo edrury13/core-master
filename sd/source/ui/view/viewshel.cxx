@@ -36,6 +36,7 @@
 #include <sfx2/viewfrm.hxx>
 #include <sfx2/bindings.hxx>
 #include <sfx2/dispatch.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <vcl/commandevent.hxx>
 #include <svl/eitem.hxx>
 #include <svx/ruler.hxx>
@@ -164,6 +165,7 @@ ViewShell::ViewShell( vcl::Window* pParentWindow, ViewShellBase& rViewShellBase)
     ,   mpImpl(new Implementation(*this))
     ,   mpParentWindow(pParentWindow)
     ,   mpWindowUpdater(new ::sd::WindowUpdater())
+    ,   m_pDocumentTimer(new sfx2::DocumentTimer(&rViewShellBase))
 {
     OSL_ASSERT (GetViewShell()!=nullptr);
 
@@ -210,6 +212,13 @@ ViewShell::ViewShell( vcl::Window* pParentWindow, ViewShellBase& rViewShellBase)
     // Register the sub shell factory.
     mpImpl->mpSubShellFactory = std::make_shared<ViewShellObjectBarFactory>(*this);
     GetViewShellBase().GetViewShellManager()->AddSubShellFactory(this,mpImpl->mpSubShellFactory);
+    
+    // Force initial timer display update
+    if (m_pDocumentTimer)
+    {
+        GetViewShellBase().GetViewFrame().GetBindings().Invalidate(SID_DOC_TIMER);
+        GetViewShellBase().GetViewFrame().GetBindings().Update(SID_DOC_TIMER);
+    }
 }
 
 ViewShell::~ViewShell()

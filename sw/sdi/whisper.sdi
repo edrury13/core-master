@@ -1,0 +1,30 @@
+/*
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+interface Whisper
+{
+    FN_INSERT_WHISPER_TEXT
+    [
+        ExecMethod = ExecWhisper ;
+        StateMethod = GetWhisperState ;
+        DisableFlags="SfxDisableFlags::SwOnProtectedCursor";
+    ]
+
+    FN_WHISPER_START_STOP
+    [
+        ExecMethod = ExecWhisper ;
+        StateMethod = GetWhisperState ;
+        DisableFlags="SfxDisableFlags::SwOnProtectedCursor";
+    ]
+
+    FN_WHISPER_SETTINGS
+    [
+        ExecMethod = ExecWhisper ;
+        StateMethod = GetWhisperState ;
+    ]
+}

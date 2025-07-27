@@ -90,6 +90,7 @@ $(eval $(call gb_Library_use_libraries,sw,\
 
 $(eval $(call gb_Library_use_externals,sw,\
 	boost_headers \
+	curl \
 	frozen \
 	icui18n \
 	icuuc \
@@ -98,6 +99,13 @@ $(eval $(call gb_Library_use_externals,sw,\
 	yrs \
         md4c \
 ))
+
+# Platform-specific audio libraries
+ifeq ($(OS),LINUX)
+$(eval $(call gb_Library_add_libs,sw,\
+	-lasound \
+))
+endif
 
 ifneq ($(ENABLE_WASM_STRIP_ACCESSIBILITY),TRUE)
 $(eval $(call gb_Library_add_exception_objects,sw,\
@@ -532,6 +540,11 @@ $(eval $(call gb_Library_add_exception_objects,sw,\
     sw/source/core/view/viewsh \
     sw/source/core/view/vnew \
     sw/source/core/view/vprint \
+    sw/source/core/whisper/AudioCapture \
+    sw/source/core/whisper/WhisperConfig \
+    sw/source/core/whisper/WhisperManager \
+    sw/source/core/whisper/WhisperSession \
+    sw/source/ui/dialog/WhisperSettingsDialog \
     sw/source/filter/ascii/ascatr \
     sw/source/filter/ascii/parasc \
     sw/source/filter/ascii/wrtasc \
@@ -747,6 +760,7 @@ $(eval $(call gb_Library_add_exception_objects,sw,\
     sw/source/uibase/sidebar/CommentsPanel \
     sw/source/uibase/sidebar/A11yCheckIssuesPanel \
     sw/source/uibase/sidebar/QuickFindPanel \
+    sw/source/uibase/sidebar/DocumentStatisticsPanel \
     sw/source/uibase/table/chartins \
     sw/source/uibase/table/swtablerep \
     sw/source/uibase/table/tablemgr \
@@ -803,6 +817,7 @@ $(eval $(call gb_Library_add_exception_objects,sw,\
     sw/source/uibase/utlui/unotools \
     sw/source/uibase/utlui/viewlayoutctrl \
     sw/source/uibase/utlui/wordcountctrl \
+    sw/source/uibase/utlui/timerctrl \
     sw/source/uibase/utlui/zoomctrl \
     sw/source/uibase/web/wdocsh \
     sw/source/uibase/web/wformsh \

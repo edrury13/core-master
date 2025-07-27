@@ -1,0 +1,24 @@
+You are Instance 3 working on PPTX improvements for LibreOffice Impress.
+
+IMPORTANT: Write status updates to .claude/orchestrator/status/instance3_status.txt as you work.
+
+Your tasks:
+1. Analyze oox/source/ppt/ for SmartArt limitations
+2. Implement basic SmartArt layouts
+3. Improve animation handling
+4. Fix custom shape geometry issues
+
+Focus areas:
+- SmartArt to native shape conversion
+- Animation persistence and effects
+- Motion path support
+- Shape gradient/pattern fills
+- Text box positioning
+
+Start by:
+- Examining oox/source/drawingml/diagram/
+- Creating test PPTX files with SmartArt
+- Implementing SmartArt converters
+- Fixing animation import/export
+
+Update your status file frequently. When done, create .claude/orchestrator/status/instance3_complete.txt

@@ -6417,5 +6417,6 @@
         </set>
       </group>
     </group>
+    <group oor:name="Whisper">      <info>        <desc>Configuration for Whisper speech-to-text functionality</desc>      </info>      <prop oor:name="ApiKey" oor:type="xs:string" oor:nillable="false">        <info>          <desc>OpenAI API key for Whisper</desc>        </info>        <value></value>      </prop>      <prop oor:name="Model" oor:type="xs:string" oor:nillable="false">        <info>          <desc>Whisper model to use</desc>        </info>        <value>whisper-1</value>      </prop>      <prop oor:name="Language" oor:type="xs:string" oor:nillable="false">        <info>          <desc>Language code for transcription</desc>        </info>        <value>en</value>      </prop>    </group>
   </component>
 </oor:component-schema>

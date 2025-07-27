@@ -1,0 +1,33 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install VNC and desktop
+RUN apt-get update && apt-get install -y \
+    xfce4 xfce4-terminal \
+    tightvncserver novnc websockify \
+    && apt-get clean
+
+# Install LibreOffice runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libx11-6 libxrender1 libxext6 libxtst6 libxi6 \
+    libxinerama1 libxrandr2 libxcursor1 libcairo2 \
+    libcups2 libdbus-1-3 libfontconfig1 libfreetype6 \
+    libgcc-s1 libgl1 libglu1-mesa libsm6 libice6 \
+    libxcomposite1 libxdamage1 libxfixes3 libatk1.0-0 \
+    libgtk-3-0 libglib2.0-0 libharfbuzz0b libpango-1.0-0 \
+    libpangocairo-1.0-0 libpangoft2-1.0-0 libnss3 libnspr4 \
+    && apt-get clean
+
+# Setup VNC
+RUN mkdir /root/.vnc \
+    && echo "password" | vncpasswd -f > /root/.vnc/passwd \
+    && chmod 600 /root/.vnc/passwd \
+    && echo '#!/bin/bash\nstartxfce4 &' > /root/.vnc/xstartup \
+    && chmod +x /root/.vnc/xstartup
+
+EXPOSE 5901 6080
+
+CMD vncserver :1 -geometry 1920x1080 -depth 24 && \
+    websockify -D --web=/usr/share/novnc/ 6080 localhost:5901 && \
+    tail -f /dev/null

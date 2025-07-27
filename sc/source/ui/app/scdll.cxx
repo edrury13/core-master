@@ -68,6 +68,7 @@
 #include <svx/modctrl.hxx>
 #include <svx/pszctrl.hxx>
 #include <svx/grafctrl.hxx>
+#include <timerctrl.hxx>
 #include <svx/clipboardctl.hxx>
 #include <svx/formatpaintbrushctrl.hxx>
 #include <tbzoomsliderctrl.hxx>
@@ -174,7 +175,9 @@ void ScDLL::Init()
     SvxZoomSliderControl            ::RegisterControl(SID_ATTR_ZOOMSLIDER,  pMod);
     SvxModifyControl                ::RegisterControl(SID_DOC_MODIFIED,     pMod);
     XmlSecStatusBarControl          ::RegisterControl( SID_SIGNATURE,       pMod );
+    ScTimerStatusBarControl         ::RegisterControl( SID_DOC_TIMER,       pMod );
     ScAutoCalculateControl          ::RegisterControl(FID_AUTO_CALC,        pMod);
+    // ScTimerStatusBarControl         ::RegisterControl(SID_DOC_TIMER,        pMod);
 
     SvxPosSizeStatusBarControl      ::RegisterControl(SID_ATTR_SIZE,        pMod);
 

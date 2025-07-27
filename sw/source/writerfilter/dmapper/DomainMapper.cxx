@@ -28,6 +28,7 @@
 #include "ModelEventListener.hxx"
 #include "MeasureHandler.hxx"
 #include <i18nlangtag/languagetag.hxx>
+#include <i18nlangtag/lang.h>
 #include <i18nutil/paper.hxx>
 #include <ooxml/resourceids.hxx>
 #include <oox/token/tokens.hxx>
@@ -2904,7 +2905,15 @@ void DomainMapper::sprmWithProps( Sprm& rSprm, const PropertyMapPtr& rContext )
         }
     }
     break;
-    case NS_ooxml::LN_EG_RPrBase_noProof: // no grammar and spell checking, unsupported
+    case NS_ooxml::LN_EG_RPrBase_noProof: // no grammar and spell checking
+        if (nIntValue) 
+        {
+            // LibreOffice disables proofing by setting language to LANGUAGE_NONE
+            lang::Locale aLocale(LanguageTag::convertToLocale(LANGUAGE_NONE));
+            rContext->Insert(PROP_CHAR_LOCALE, uno::Any(aLocale));
+            rContext->Insert(PROP_CHAR_LOCALE_ASIAN, uno::Any(aLocale)); 
+            rContext->Insert(PROP_CHAR_LOCALE_COMPLEX, uno::Any(aLocale));
+        }
     break;
     case NS_ooxml::LN_anchor_anchor: // at_character drawing
     case NS_ooxml::LN_inline_inline: // as_character drawing

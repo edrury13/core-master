@@ -6644,6 +6644,8 @@ static const FieldConversionMap_t & lcl_GetFieldConversion()
         {u"XE"_ustr,          {"com.sun.star.text.DocumentIndexMark",     FIELD_XE            }},
         {u"BIBLIOGRAPHY"_ustr,{"com.sun.star.text.Bibliography",          FIELD_BIBLIOGRAPHY  }},
         {u"CITATION"_ustr,    {"com.sun.star.text.TextField.Bibliography",FIELD_CITATION      }},
+        {u"PRINTDATE"_ustr,   {"DocInfo.PrintDateTime",                   FIELD_PRINTDATE     }},
+        {u"SAVEDATE"_ustr,    {"DocInfo.ChangeDateTime",                  FIELD_SAVEDATE      }},
     };
 
     return aFieldConversionMap;

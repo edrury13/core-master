@@ -23,4 +23,8 @@
     constructor="com_sun_star_cui_GetCreateDialogFactoryService">
     <service name="com.sun.star.cui.GetCreateDialogFactoryService"/>
   </implementation>
+  <implementation name="com.sun.star.comp.cui.GoogleDriveFilePicker"
+    constructor="cui_GoogleDriveFilePicker_get_implementation">
+    <service name="com.sun.star.ui.dialogs.GoogleDriveFilePicker"/>
+  </implementation>
 </component>

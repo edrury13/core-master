@@ -1,0 +1,62 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV USER=root
+ENV PASSWORD=password
+
+# Install VNC server and desktop environment
+RUN apt-get update && apt-get install -y \
+    xfce4 \
+    xfce4-goodies \
+    xfce4-terminal \
+    tightvncserver \
+    novnc \
+    websockify \
+    supervisor \
+    sudo \
+    wget \
+    net-tools \
+    vim \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install LibreOffice dependencies
+RUN apt-get update && apt-get install -y \
+    libx11-6 libxrender1 libxext6 libxtst6 libxi6 \
+    libxinerama1 libxrandr2 libxcursor1 libcairo2 \
+    libcups2 libdbus-1-3 libfontconfig1 libfreetype6 \
+    libgcc-s1 libgl1 libglu1-mesa libsm6 libice6 \
+    libxcomposite1 libxdamage1 libxfixes3 libatk1.0-0 \
+    libgtk-3-0 libglib2.0-0 libharfbuzz0b libpango-1.0-0 \
+    libpangocairo-1.0-0 libpangoft2-1.0-0 libnss3 libnspr4 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup VNC
+RUN mkdir -p ~/.vnc \
+    && echo "$PASSWORD" | vncpasswd -f > ~/.vnc/passwd \
+    && chmod 600 ~/.vnc/passwd
+
+# Create xstartup file
+RUN echo '#!/bin/bash\n\
+xrdb $HOME/.Xresources\n\
+startxfce4 &' > ~/.vnc/xstartup \
+    && chmod +x ~/.vnc/xstartup
+
+# Create supervisord config
+RUN echo '[supervisord]\n\
+nodaemon=true\n\
+\n\
+[program:vnc]\n\
+command=/usr/bin/vncserver :1 -geometry 1920x1080 -depth 24 -dpi 96\n\
+autorestart=true\n\
+user=root\n\
+\n\
+[program:novnc]\n\
+command=/usr/share/novnc/utils/launch.sh --vnc localhost:5901 --listen 6080\n\
+autorestart=true\n\
+user=root' > /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 5901 6080
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

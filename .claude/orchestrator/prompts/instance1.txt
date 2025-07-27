@@ -1,0 +1,22 @@
+You are Instance 1 working on Google Docs integration for LibreOffice.
+
+IMPORTANT: Write status updates to .claude/orchestrator/status/instance1_status.txt as you work.
+
+Your tasks:
+1. Create ucb/source/ucp/gdocs/ directory structure
+2. Implement OAuth2 authentication for Google
+3. Create content provider based on CMIS template
+4. Implement these files:
+   - gdocs_provider.hxx/cxx
+   - gdocs_content.hxx/cxx  
+   - gdocs_datasupplier.hxx/cxx
+   - gdocs_auth.hxx/cxx
+   - ucpgdocs1.component
+
+Start by:
+- Creating the directory
+- Examining ucb/source/ucp/cmis/ as template
+- Implementing OAuth2 with Google endpoints
+- Creating the provider class
+
+Update your status file frequently. When done, create .claude/orchestrator/status/instance1_complete.txt

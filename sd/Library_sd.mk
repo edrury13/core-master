@@ -167,6 +167,7 @@ $(eval $(call gb_Library_add_exception_objects,sd,\
 	sd/source/core/drawdoc3 \
 	sd/source/core/drawdoc4 \
 	sd/source/core/drawdoc_animations \
+	sd/source/core/formcontrolshape \
 	sd/source/core/pglink \
 	sd/source/core/sdpage \
 	sd/source/core/sdpage2 \
@@ -225,6 +226,7 @@ $(eval $(call gb_Library_add_exception_objects,sd,\
 	sd/source/ui/app/sdpopup \
 	sd/source/ui/app/sdxfer \
 	sd/source/ui/app/tmplctrl \
+	sd/source/ui/app/timerctrl \
 	sd/source/ui/app/scalectrl \
 	sd/source/ui/controller/slidelayoutcontroller \
 	sd/source/ui/controller/displaymodecontroller \
@@ -444,6 +446,7 @@ $(eval $(call gb_Library_add_exception_objects,sd,\
 	sd/source/ui/unoidl/unodoc \
 	sd/source/ui/unoidl/unolayer \
 	sd/source/ui/unoidl/unomodel \
+	sd/source/ui/unoidl/unomodel_pdfexport \
 	sd/source/ui/unoidl/unomodule \
 	sd/source/ui/unoidl/unoobj \
 	sd/source/ui/unoidl/unopage \
@@ -495,6 +498,7 @@ $(eval $(call gb_Library_add_exception_objects,sd,\
 	sd/source/ui/view/drviewsi \
 	sd/source/ui/view/drviewsj \
 	sd/source/ui/view/drviewsk \
+	sd/source/ui/view/drviews_form \
 	sd/source/ui/view/drvwshrg \
 	sd/source/ui/view/frmview \
 	sd/source/ui/view/grviewsh \

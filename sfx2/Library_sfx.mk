@@ -74,6 +74,7 @@ $(eval $(call gb_Library_use_libraries,sfx,\
 
 $(eval $(call gb_Library_use_externals,sfx,\
     boost_headers \
+    curl \
     frozen \
     icu_headers \
     icui18n \
@@ -223,6 +224,7 @@ $(eval $(call gb_Library_add_exception_objects,sfx,\
     sfx2/source/doc/doctemplateslocal \
     sfx2/source/doc/exoticfileloadexception \
     sfx2/source/doc/frmdescr \
+    sfx2/source/doc/gdrivesync \
     sfx2/source/doc/graphhelp \
     sfx2/source/doc/guisaveas \
     sfx2/source/doc/iframe \
@@ -297,6 +299,7 @@ $(eval $(call gb_Library_add_exception_objects,sfx,\
     sfx2/source/toolbox/weldutils \
     sfx2/source/view/classificationcontroller \
     sfx2/source/view/classificationhelper \
+    sfx2/source/view/DocumentTimer \
     sfx2/source/view/frame \
     sfx2/source/view/frame2 \
     sfx2/source/view/frmload \

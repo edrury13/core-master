@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  libreoffice-vnc:
+    image: theasp/novnc:latest
+    container_name: libreoffice-vnc-desktop
+    ports:
+      - "6080:6080"
+      - "5901:5900"
+    environment:
+      - VNC_PASSWORD=password
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+    volumes:
+      - core-master_libreoffice-build:/build
+    command: bash -c "cd /build && /build/instdir/program/soffice || /bin/bash"
+
+volumes:
+  core-master_libreoffice-build:
+    external: true

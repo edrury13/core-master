@@ -23,6 +23,7 @@
 #include <DrawController.hxx>
 
 #include <sfx2/viewfrm.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <editeng/eeitem.hxx>
 #include <editeng/tstpitem.hxx>
 #include <editeng/lrspitem.hxx>
@@ -1077,6 +1078,22 @@ void  DrawViewShell::ExecStatusBar(SfxRequest& rReq)
         {
             GetViewFrame()->GetDispatcher()->Execute(SID_GO_TO_PAGE,
                                 SfxCallMode::SYNCHRON | SfxCallMode::RECORD);
+        }
+        break;
+        
+        case SID_DOC_TIMER:
+        {
+            if (GetDocumentTimer())
+            {
+                if (GetDocumentTimer()->IsActive())
+                    GetDocumentTimer()->Stop();
+                else
+                    GetDocumentTimer()->Start();
+                
+                // Update status bar immediately
+                SfxBindings& rBindings = GetViewFrame()->GetBindings();
+                rBindings.Invalidate(SID_DOC_TIMER);
+            }
         }
         break;
     }

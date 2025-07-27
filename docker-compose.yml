@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Main VNC-enabled LibreOffice development environment
+  libreoffice-vnc:
+    build: .
+    image: libreoffice-builder-vnc
+    container_name: libreoffice-vnc
+    ports:
+      - "5901:5901"  # VNC server port
+      - "6080:6080"  # noVNC web interface port
+    volumes:
+      - ./:/core:ro  # Source code (read-only)
+      - libreoffice-build:/build  # Build output
+      - libreoffice-ccache:/ccache  # Build cache
+      - libreoffice-home:/home/builder  # User home persistence
+    environment:
+      - CCACHE_DIR=/ccache
+      - VNC_RESOLUTION=1920x1080
+      - VNC_PASSWORD=libreoffice
+      - PARALLELISM=4
+    working_dir: /core
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    
+  # Legacy X11 forwarding service (for Linux hosts)
+  libreoffice-x11:
+    build: .
+    image: libreoffice-builder-vnc
+    container_name: libreoffice-x11
+    profiles: ["x11"]
+    volumes:
+      - ./:/core:ro
+      - libreoffice-build:/build
+      - libreoffice-ccache:/ccache
+      # X11 forwarding (Linux only)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # WSLg support (WSL2 only)
+      - /mnt/wslg:/mnt/wslg
+    environment:
+      - CCACHE_DIR=/ccache
+      - DISPLAY=${DISPLAY:-:0}
+      - WAYLAND_DISPLAY=wayland-0
+      - XDG_RUNTIME_DIR=/mnt/wslg/runtime-dir
+      - PULSE_SERVER=/mnt/wslg/PulseServer
+    working_dir: /core
+    network_mode: host
+    stdin_open: true
+    tty: true
+    
+  # Build-only service (no GUI)
+  libreoffice-build:
+    build: .
+    image: libreoffice-builder-vnc
+    container_name: libreoffice-build
+    profiles: ["build"]
+    volumes:
+      - ./:/core:ro
+      - libreoffice-build:/build
+      - libreoffice-ccache:/ccache
+    environment:
+      - CCACHE_DIR=/ccache
+      - PARALLELISM=8
+    working_dir: /core
+    command: |
+      bash -c "
+        echo 'Copying source files to build directory...'
+        cp -r /core/* /build/ 2>/dev/null || true
+        cd /build
+        echo 'Configuring LibreOffice build...'
+        ./autogen.sh --enable-debug --disable-gui --without-java --without-help --without-myspell-dicts --with-parallelism=8
+        echo 'Building LibreOffice (this will take a while)...'
+        make -j8
+        echo 'Build complete!'
+        echo 'Built LibreOffice available at: /build/instdir/program/soffice'
+      "
+
+volumes:
+  libreoffice-build:
+  libreoffice-ccache:
+  libreoffice-home:

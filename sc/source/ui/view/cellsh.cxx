@@ -48,6 +48,7 @@
 #include <transobj.hxx>
 #include <drwtrans.hxx>
 #include <scabstdlg.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <postit.hxx>
 #include <cliputil.hxx>
 #include <clipparam.hxx>
@@ -78,6 +79,10 @@ ScCellShell::ScCellShell(ScViewData& rData, const VclPtr<vcl::Window>& frameWin)
 {
     SetName(u"Cell"_ustr);
     SfxShell::SetContextName(vcl::EnumContext::GetContextName(vcl::EnumContext::Context::Cell));
+    
+    // Force initial timer display update
+    SfxBindings& rBindings = rData.GetBindings();
+    rBindings.Invalidate(SID_DOC_TIMER);
 }
 
 ScCellShell::~ScCellShell()
@@ -877,6 +882,26 @@ void ScCellShell::GetState(SfxItemSet &rSet)
                             rSet.Put( SfxStringItem( nWhich, aStr ) );
                         }
                     }
+                }
+                break;
+                
+            case SID_DOC_TIMER:
+                {
+                    OUString aTimerString;
+                    ScTabViewShell* pViewSh = GetViewData().GetViewShell();
+                    if (pViewSh && pViewSh->GetDocumentTimer())
+                    {
+                        aTimerString = "Timer: " + pViewSh->GetDocumentTimer()->GetTimeString();
+                        if (pViewSh->GetDocumentTimer()->IsActive())
+                            aTimerString += " [Running]";
+                        else
+                            aTimerString += " [Stopped]";
+                    }
+                    else
+                    {
+                        aTimerString = "Timer: 00:00:00 [Stopped]";
+                    }
+                    rSet.Put( SfxStringItem( SID_DOC_TIMER, aTimerString ) );
                 }
                 break;
 

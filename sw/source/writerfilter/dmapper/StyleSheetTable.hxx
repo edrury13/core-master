@@ -68,6 +68,7 @@ public:
     std::vector<css::beans::PropertyValue> m_aLatentStyles; ///< Attributes of latentStyles
     std::vector<css::beans::PropertyValue> m_aLsdExceptions; ///< List of lsdException attribute lists
     bool           m_bAutoRedefine; ///< Writer calls this auto-update.
+    bool           m_bHasInheritance; ///< Style inherits from another style
 
     void AppendInteropGrabBag(const css::beans::PropertyValue& rValue);
     css::beans::PropertyValue GetInteropGrabBag(); ///< Used for table styles, has a name.

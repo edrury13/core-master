@@ -98,6 +98,8 @@
 #include <com/sun/star/uno/Any.hxx>
 #include <com/sun/star/linguistic2/ProofreadingResult.hpp>
 #include <com/sun/star/linguistic2/XDictionary.hpp>
+#include <whisper/WhisperManager.hxx>
+#include <whisper/WhisperSettingsDialog.hxx>
 #include <com/sun/star/linguistic2/XSpellAlternatives.hpp>
 #include <editeng/unolingu.hxx>
 #include <doc.hxx>
@@ -3557,6 +3559,12 @@ void SwTextShell::Execute(SfxRequest &rReq)
             }
         }
         break;
+    case FN_INSERT_WHISPER_TEXT:
+    case FN_WHISPER_START_STOP:
+    case FN_WHISPER_SETTINGS:
+        ExecWhisper(rReq);
+        break;
+        
     default:
         OSL_ENSURE(false, "wrong dispatcher");
         return;
@@ -3568,9 +3576,48 @@ void SwTextShell::GetState( SfxItemSet &rSet )
     SwWrtShell &rSh = GetShell();
     SfxWhichIter aIter( rSet );
     sal_uInt16 nWhich = aIter.FirstWhich();
+    
+    // Debug: log all state queries
+    static int nCallCount = 0;
+    nCallCount++;
+    if (nCallCount < 50) // Limit logging to avoid spam
+    {
+        SAL_WARN("sw.whisper", "SwTextShell::GetState called (#" << nCallCount << "), first which: " << nWhich);
+        // Log if this is near our whisper commands (21444-21446)
+        if (nWhich >= 21440 && nWhich <= 21450)
+        {
+            SAL_WARN("sw.whisper", "*** NEAR WHISPER RANGE: which=" << nWhich);
+        }
+    }
+    // Log all which values when iterating
+    static bool bLoggedAll = false;
+    if (!bLoggedAll && nCallCount == 1)
+    {
+        SAL_WARN("sw.whisper", "=== Logging all which values in first GetState call ===");
+        SfxWhichIter aDebugIter(rSet);
+        sal_uInt16 nDebugWhich = aDebugIter.FirstWhich();
+        while (nDebugWhich)
+        {
+            SAL_WARN("sw.whisper", "  Which: " << nDebugWhich);
+            nDebugWhich = aDebugIter.NextWhich();
+        }
+        bLoggedAll = true;
+    }
+    
     while ( nWhich )
     {
         const sal_uInt16 nSlotId = GetPool().GetSlotId(nWhich);
+        
+        // Debug specific whisper commands
+        if (nSlotId == FN_INSERT_WHISPER_TEXT || nSlotId == FN_WHISPER_START_STOP || nSlotId == FN_WHISPER_SETTINGS ||
+            nWhich == FN_INSERT_WHISPER_TEXT || nWhich == FN_WHISPER_START_STOP || nWhich == FN_WHISPER_SETTINGS)
+        {
+            SAL_WARN("sw.whisper", "WHISPER COMMAND FOUND! nWhich=" << nWhich << ", nSlotId=" << nSlotId 
+                << " (FN_INSERT_WHISPER_TEXT=" << FN_INSERT_WHISPER_TEXT 
+                << ", FN_WHISPER_START_STOP=" << FN_WHISPER_START_STOP
+                << ", FN_WHISPER_SETTINGS=" << FN_WHISPER_SETTINGS << ")");
+        }
+        
         switch (nSlotId)
         {
         case FN_FORMAT_CURRENT_FOOTNOTE_DLG:
@@ -4315,9 +4362,179 @@ void SwTextShell::GetState( SfxItemSet &rSet )
                 }
             }
             break;
+            
+        case FN_INSERT_WHISPER_TEXT:
+        case FN_WHISPER_START_STOP:
+        case FN_WHISPER_SETTINGS:
+            SAL_WARN("sw.whisper", "GetState: Whisper command detected: " << nSlotId);
+            GetWhisperState(rSet);
+            break;
         }
         nWhich = aIter.NextWhich();
     }
+    
+    // Check if any whisper commands were missed
+    if (rSet.GetItemState(FN_INSERT_WHISPER_TEXT) == SfxItemState::INVALID)
+    {
+        SAL_WARN("sw.whisper", "FN_INSERT_WHISPER_TEXT not handled, adding manually");
+        GetWhisperState(rSet);
+    }
+    if (rSet.GetItemState(FN_WHISPER_START_STOP) == SfxItemState::INVALID)
+    {
+        SAL_WARN("sw.whisper", "FN_WHISPER_START_STOP not handled, adding manually");
+        GetWhisperState(rSet);
+    }
+    if (rSet.GetItemState(FN_WHISPER_SETTINGS) == SfxItemState::INVALID)
+    {
+        SAL_WARN("sw.whisper", "FN_WHISPER_SETTINGS not handled, adding manually");
+        GetWhisperState(rSet);
+    }
 }
+
+void SwTextShell::ExecWhisper(SfxRequest& rReq)
+{
+    SAL_WARN("sw.whisper", "ExecWhisper called with slot: " << rReq.GetSlot());
+    
+    SwWrtShell& rSh = GetShell();
+    auto& rWhisperMgr = sw::whisper::WhisperManager::getInstance();
+    
+    switch (rReq.GetSlot())
+    {
+        case FN_INSERT_WHISPER_TEXT:
+        {
+            SAL_WARN("sw.whisper", "FN_INSERT_WHISPER_TEXT clicked - current state: " << static_cast<int>(rWhisperMgr.getState()));
+            // Toggle recording
+            if (rWhisperMgr.getState() == sw::whisper::WhisperState::Idle)
+            {
+                SAL_WARN("sw.whisper", "Starting recording with text insert callback");
+                rWhisperMgr.setTextInsertCallback([&rSh](const OUString& rText) {
+                    rSh.Insert(rText);
+                });
+                rWhisperMgr.startRecording();
+            }
+            else if (rWhisperMgr.getState() == sw::whisper::WhisperState::Recording)
+            {
+                SAL_WARN("sw.whisper", "Stopping recording");
+                rWhisperMgr.stopRecording();
+            }
+        }
+        break;
+        
+        case FN_WHISPER_START_STOP:
+        {
+            SAL_WARN("sw.whisper", "FN_WHISPER_START_STOP clicked - current state: " << static_cast<int>(rWhisperMgr.getState()));
+            // Toggle recording without auto-insert
+            if (rWhisperMgr.getState() == sw::whisper::WhisperState::Idle)
+            {
+                SAL_WARN("sw.whisper", "Starting recording with text insert");
+                // Set up text insertion callback - capture view pointer
+                SwView* pView = &GetView();
+                rWhisperMgr.setTextInsertCallback([pView](const OUString& rText) {
+                    SAL_WARN("sw.whisper", "Text insert callback called with: " << rText);
+                    if (pView) {
+                        SwWrtShell& rWrtSh = pView->GetWrtShell();
+                        // Insert the transcribed text at cursor position
+                        rWrtSh.Insert(rText);
+                    }
+                });
+                rWhisperMgr.startRecording();
+            }
+            else if (rWhisperMgr.getState() == sw::whisper::WhisperState::Recording)
+            {
+                SAL_WARN("sw.whisper", "Stopping recording");
+                rWhisperMgr.stopRecording();
+            }
+        }
+        break;
+        
+        case FN_WHISPER_SETTINGS:
+        {
+            SAL_WARN("sw.whisper", "FN_WHISPER_SETTINGS clicked - opening settings dialog");
+            try {
+                auto& rWhisperConfig = rWhisperMgr.getConfig();
+                sw::whisper::WhisperSettingsDialog aDlg(GetView().GetFrameWeld(), rWhisperConfig);
+                aDlg.run();
+            } catch (const std::exception& e) {
+                SAL_WARN("sw.whisper", "Failed to open settings dialog: " << e.what());
+            } catch (...) {
+                SAL_WARN("sw.whisper", "Failed to open settings dialog: unknown exception");
+            }
+        }
+        break;
+    }
+}
+
+void SwTextShell::GetWhisperState(SfxItemSet& rSet)
+{
+    auto& rWhisperMgr = sw::whisper::WhisperManager::getInstance();
+    
+    SfxWhichIter aIter(rSet);
+    sal_uInt16 nWhich = aIter.FirstWhich();
+    
+    SAL_WARN("sw.whisper", "GetWhisperState called, isConfigured: " << rWhisperMgr.isConfigured());
+    
+    // Check if we have a valid shell and document
+    SwWrtShell& rSh = GetShell();
+    if (rSh.IsSelFrameMode())
+    {
+        SAL_WARN("sw.whisper", "Disabling whisper - frame mode");
+        // Disable all whisper commands when in frame mode
+        while (nWhich)
+        {
+            if (nWhich == FN_INSERT_WHISPER_TEXT || 
+                nWhich == FN_WHISPER_START_STOP || 
+                nWhich == FN_WHISPER_SETTINGS)
+            {
+                rSet.DisableItem(nWhich);
+            }
+            nWhich = aIter.NextWhich();
+        }
+        return;
+    }
+    
+    while (nWhich)
+    {
+        switch (nWhich)
+        {
+            case FN_INSERT_WHISPER_TEXT:
+            case FN_WHISPER_START_STOP:
+            {
+                SAL_WARN("sw.whisper", "Checking whisper command " << nWhich << ", isConfigured: " << rWhisperMgr.isConfigured());
+                if (!rWhisperMgr.isConfigured())
+                {
+                    rSet.DisableItem(nWhich);
+                    SAL_WARN("sw.whisper", "Disabled command " << nWhich << " - not configured");
+                }
+                else
+                {
+                    // Set the toggle state based on recording state
+                    bool bRecording = rWhisperMgr.getState() == sw::whisper::WhisperState::Recording;
+                    rSet.Put(SfxBoolItem(nWhich, bRecording));
+                    SAL_WARN("sw.whisper", "Enabled command " << nWhich << " - recording: " << bRecording);
+                }
+            }
+            break;
+            
+            case FN_WHISPER_SETTINGS:
+            {
+                // Settings is always enabled (unless in frame mode, handled above)
+                SAL_WARN("sw.whisper", "Settings menu item should be enabled (command: " << nWhich << ")");
+            }
+            break;
+            
+            default:
+                SAL_WARN("sw.whisper", "Unknown whisper command in GetWhisperState: " << nWhich);
+            break;
+        }
+        
+        nWhich = aIter.NextWhich();
+    }
+}
+
+// Add global initialization check
+static bool g_bWhisperDebugInit = []() {
+    SAL_WARN("sw.whisper", "textsh1.cxx loaded - Whisper debugging active");
+    return true;
+}();
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

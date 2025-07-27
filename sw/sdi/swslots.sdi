@@ -29,6 +29,7 @@ module StarWriter
 
     include "switems.sdi"
     include "swriter.sdi"
+    include "swriter_docstat.sdi"
 
     include "_docsh.sdi"
     include "docsh.sdi"
@@ -42,6 +43,7 @@ module StarWriter
     include "_textsh.sdi"
     include "textsh.sdi"
     include "wtextsh.sdi"
+    include "whisper.sdi"
 
     include "_drwbase.sdi"
     include "sidebar.sdi"

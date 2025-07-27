@@ -1,0 +1,16 @@
+﻿# Quick Commands:
+
+## Enter container:
+docker exec -it libreoffice-dev bash
+
+## Build LibreOffice (first time, takes 1-2 hours):
+docker exec -it libreoffice-dev bash -c "cd /source && cp -r * /build/ && cd /build && ./autogen.sh && make -j4"
+
+## Run LibreOffice Writer:
+docker exec libreoffice-dev bash -c "DISPLAY=172.28.160.1:0.0 /build/instdir/program/soffice --writer"
+
+## Run LibreOffice Calc:
+docker exec libreoffice-dev bash -c "DISPLAY=172.28.160.1:0.0 /build/instdir/program/soffice --calc"
+
+## Rebuild specific module (e.g., Writer):
+docker exec -it libreoffice-dev bash -c "cd /build && make sw"

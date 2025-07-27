@@ -80,6 +80,7 @@
 #include <redlndlg.hxx>
 #include <view.hxx>
 #include <uivwimp.hxx>
+#include <sfx2/DocumentTimer.hxx>
 #include <docsh.hxx>
 #include <doc.hxx>
 #include <printdata.hxx>
@@ -1938,6 +1939,25 @@ void SwView::StateStatusLine(SfxItemSet &rSet)
                     pWrdCnt->SetCounts(selectionStats, documentStats);
             }
             break;
+            
+            case FN_STAT_DOCTIMER:
+            {
+                OUString aTimerString;
+                if (GetDocumentTimer())
+                {
+                    aTimerString = "Timer: " + GetDocumentTimer()->GetTimeString();
+                    if (GetDocumentTimer()->IsActive())
+                        aTimerString += " [Running]";
+                    else
+                        aTimerString += " [Stopped]";
+                }
+                else
+                {
+                    aTimerString = "Timer: 00:00:00 [Stopped]";
+                }
+                rSet.Put( SfxStringItem( FN_STAT_DOCTIMER, aTimerString ) );
+            }
+            break;
             case FN_STAT_ACCESSIBILITY_CHECK:
             {
                 std::unique_ptr<sw::OnlineAccessibilityCheck> const& rOnlineAccessibilityCheck = rShell.GetDoc()->getOnlineAccessibilityCheck();
@@ -2240,6 +2260,28 @@ void SwView::ExecuteStatusLine(SfxRequest &rReq)
         {
             GetViewFrame().GetDispatcher()->Execute(FN_WORDCOUNT_DIALOG,
                                       SfxCallMode::SYNCHRON|SfxCallMode::RECORD );
+        }
+        break;
+        
+        case FN_STAT_DOCTIMER:
+        {
+            SAL_WARN("sw.ui", "ExecuteStatusLine: FN_STAT_DOCTIMER clicked");
+            // Toggle timer state
+            if (GetDocumentTimer())
+            {
+                SAL_WARN("sw.ui", "ExecuteStatusLine: Timer exists, active=" << GetDocumentTimer()->IsActive());
+                if (GetDocumentTimer()->IsActive())
+                    GetDocumentTimer()->Stop();
+                else
+                    GetDocumentTimer()->Start();
+                
+                // Force immediate update
+                GetViewFrame().GetBindings().Update(FN_STAT_DOCTIMER);
+            }
+            else
+            {
+                SAL_WARN("sw.ui", "ExecuteStatusLine: Timer is NULL!");
+            }
         }
         break;
 
